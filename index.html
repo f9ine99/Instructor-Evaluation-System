@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Student Evaluation - Instructor Assessment</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header with Theme Toggle and Navbar -->
+        <div class="header">
+            <div>
+                <h1 class="header__title">Instructor Evaluation</h1>
+            </div>
+            <!-- Navbar with pill-shaped container (includes theme toggle) -->
+            <nav class="navbar">
+                <a href="home.html" class="nav-home-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        style="width: 18px; height: 18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Home
+                </a>
+                <button class="nav-logout-btn" id="logoutBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        style="width: 18px; height: 18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg class="moon-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Session Time Notice -->
+        <div class="card"
+            style="background: rgba(255, 193, 7, 0.1); border-color: rgba(255, 193, 7, 0.3); margin-bottom: 24px;">
+            <p style="color: var(--text-primary); font-size: 14px; margin: 0; text-align: center;">
+                ⏰ <strong>Important:</strong> This evaluation page is available for a limited time only. Please complete
+                and submit your evaluation within the appropriate session time.
+            </p>
+        </div>
+
+        <!-- Course Information Card (Read-Only) -->
+        <div class="card">
+            <h2 class="card__title">
+                Course Information
+            </h2>
+            <div class="course-info" id="courseInfo">
+                <div class="info-item">
+                    <div class="info-item__label">Faculty Member</div>
+                    <div class="info-item__value" id="faculty">Mr X</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item__label">Department</div>
+                    <div class="info-item__value" id="dept">Computer Science</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item__label">Course Title</div>
+                    <div class="info-item__value" id="course">Web Programming</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item__label">Program</div>
+                    <div class="info-item__value" id="program">BSc CS</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item__label">Year</div>
+                    <div class="info-item__value" id="studentYear">3rd Year</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item__label">Semester</div>
+                    <div class="info-item__value" id="semester">I</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item__label">Academic Year</div>
+                    <div class="info-item__value" id="year">2025</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluation Form -->
+        <form id="evalForm">
+            <div class="card">
+                <h2 class="card__title">
+                    Evaluation Questions
+                </h2>
+
+                <!-- Rating Scale Guide -->
+                <div
+                    style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--card-border);">
+                    <h3 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px 0;">
+                        Rating Scale Guide
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                        <div
+                            style="text-align: center; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--input-border);">
+                            <div
+                                style="font-size: 24px; font-weight: 800; color: var(--accent-primary); margin-bottom: 4px;">
+                                5</div>
+                            <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Strongly Agree
+                            </div>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--input-border);">
+                            <div
+                                style="font-size: 24px; font-weight: 800; color: var(--accent-primary); margin-bottom: 4px;">
+                                4</div>
+                            <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Agree</div>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--input-border);">
+                            <div
+                                style="font-size: 24px; font-weight: 800; color: var(--text-secondary); margin-bottom: 4px;">
+                                3</div>
+                            <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Neutral</div>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--input-border);">
+                            <div
+                                style="font-size: 24px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px;">
+                                2</div>
+                            <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Disagree</div>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--input-border);">
+                            <div
+                                style="font-size: 24px; font-weight: 800; color: var(--text-muted); margin-bottom: 4px;">
+                                1</div>
+                            <div style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Strongly
+                                Disagree</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin: 12px 0 0 0; text-align: center;">
+                        Please rate each statement based on your experience with the instructor
+                    </p>
+                </div>
+
+                <div class="questions" id="questions">
+                    <!-- Questions will be injected by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card">
+                <h2 class="card__title">
+                    Additional Comments
+                </h2>
+                <div class="comments">
+                    <label class="comments__label" for="comments">
+                        Share your thoughts about this instructor (Optional)
+                    </label>
+                    <textarea id="comments" name="comments" class="comments__textarea"
+                        placeholder="Your comments help improve teaching quality..."></textarea>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="button-group">
+                <button type="button" class="btn btn--secondary" id="resetBtn">
+                    Reset Form
+                </button>
+                <button type="submit" class="btn btn--primary">
+                    Submit Evaluation
+                </button>
+            </div>
+        </form>
+
+        <!-- Note about anonymity -->
+        <div class="card" style="margin-top: 24px;">
+            <p
+                style="color: var(--text-muted); font-size: 14px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    style="width: 20px; height: 20px; color: var(--accent-primary);">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Your evaluation is completely anonymous. No personal information is collected.</span>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
