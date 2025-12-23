@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Instructor Dashboard - HOPE Evaluation System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Reusing Admin styles for consistency, with specific overrides */
+        body {
+            display: block;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .admin-layout {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar (Same as Admin) */
+        .sidebar {
+            background: var(--card-bg);
+            border-right: 1px solid var(--card-border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            width: 280px;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--input-bg);
+            color: var(--accent-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(var(--accent-primary-rgb), 0.1);
+            border: 1px solid var(--card-border);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 32px;
+            width: calc(100% - 280px);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: var(--input-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-primary);
+            font-size: 24px;
+        }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .stat-info .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Content Sections */
+        .section-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section-content.active {
+            display: block;
+        }
+
+        /* Analytics Cards */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .analytics-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .score-bar {
+            height: 8px;
+            background: var(--input-bg);
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .score-high {
+            background: #10b981;
+        }
+
+        .score-med {
+            background: #f59e0b;
+        }
+
+        .score-low {
+            background: #ef4444;
+        }
+
+        /* Feedback Form */
+        .feedback-form {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 32px;
+            margin-top: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            min-height: 150px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-textarea:focus {
+            border-color: var(--accent-primary);
+        }
+
+        .btn-submit {
+            padding: 12px 24px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent-hover);
+        }
+
+        @media (max-width: 1024px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 16px;
+            }
+
+            .sidebar-header {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border: none;
+            }
+
+            .nav-links {
+                flex-direction: row;
+                gap: 16px;
+            }
+
+            .nav-item span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">HOPE</div>
+            </div>
+
+            <nav class="nav-links">
+                <a class="nav-item active" onclick="switchSection('overview')">
+                    <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span>Overview</span>
+                </a>
+                <a class="nav-item" onclick="switchSection('reports')">
+                    <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Detailed Reports</span>
+                </a>
+                <a class="nav-item" onclick="switchSection('feedback')">
+                    <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>My Reflection</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <svg class="moon-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                <a href="login.html" class="nav-item" style="color: #ef4444;">
+                    <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 class="page-title" id="pageTitle">Instructor Overview</h1>
+                <div style="display: flex; gap: 24px; align-items: center;">
+                    <div class="semester-selector">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            style="width: 18px; height: 18px; color: var(--accent-primary);">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <select class="semester-select" id="semesterSelect">
+                            <option value="2025-1">Semester 1 in 2025</option>
+                            <option value="2025-2">Semester 2 in 2025</option>
+                            <option value="2024-1">Semester 1 in 2024</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                        <span style="color: var(--text-secondary); font-size: 14px;">Dr. Abebe Kebede</span>
+                        <div
+                            style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                            AK</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1. OVERVIEW -->
+            <section id="overview" class="section-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" style="width: 28px; height: 28px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Students</h3>
+                            <div class="value">142</div>
+                            <div style="font-size: 12px; color: #10b981; margin-top: 4px;">Across 3 courses</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" style="width: 28px; height: 28px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Evaluations</h3>
+                            <div class="value">118</div>
+                            <div style="font-size: 12px; color: #10b981; margin-top: 4px;">83% Response Rate</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" style="width: 28px; height: 28px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Overall Rating</h3>
+                            <div class="value">4.6</div>
+                            <div class="score-bar" style="margin-top: 8px; width: 100px;">
+                                <div class="score-fill score-high" style="width: 92%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3 style="color: var(--text-primary); margin-bottom: 24px;">Performance Breakdown</h3>
+                        <div style="margin-bottom: 16px;">
+                            <div
+                                style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 14px; margin-bottom: 4px;">
+                                <span>Teaching Effectiveness</span>
+                                <span>4.8/5.0</span>
+                            </div>
+                            <div class="score-bar">
+                                <div class="score-fill score-high" style="width: 96%;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <div
+                                style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 14px; margin-bottom: 4px;">
+                                <span>Course Content</span>
+                                <span>4.5/5.0</span>
+                            </div>
+                            <div class="score-bar">
+                                <div class="score-fill score-high" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <div
+                                style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 14px; margin-bottom: 4px;">
+                                <span>Grading Fairness</span>
+                                <span>4.2/5.0</span>
+                            </div>
+                            <div class="score-bar">
+                                <div class="score-fill score-high" style="width: 84%;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <div
+                                style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 14px; margin-bottom: 4px;">
+                                <span>Availability</span>
+                                <span>4.7/5.0</span>
+                            </div>
+                            <div class="score-bar">
+                                <div class="score-fill score-high" style="width: 94%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3 style="color: var(--text-primary); margin-bottom: 24px;">Student Comments</h3>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <div style="padding: 16px; background: var(--input-bg); border-radius: 12px;">
+                                <p style="color: var(--text-primary); font-size: 14px; margin-bottom: 8px;">"The
+                                    lectures were very engaging and the examples helped clarify difficult concepts."</p>
+                                <span style="color: var(--text-secondary); font-size: 12px;">CS101 • 2 days ago</span>
+                            </div>
+                            <div style="padding: 16px; background: var(--input-bg); border-radius: 12px;">
+                                <p style="color: var(--text-primary); font-size: 14px; margin-bottom: 8px;">"I
+                                    appreciated the quick feedback on assignments. It really helped me improve."</p>
+                                <span style="color: var(--text-secondary); font-size: 12px;">CS101 • 3 days ago</span>
+                            </div>
+                            <div style="padding: 16px; background: var(--input-bg); border-radius: 12px;">
+                                <p style="color: var(--text-primary); font-size: 14px; margin-bottom: 8px;">"Would love
+                                    more practice problems before the exams."</p>
+                                <span style="color: var(--text-secondary); font-size: 12px;">CS202 • 1 week ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. DETAILED REPORTS -->
+            <section id="reports" class="section-content">
+                <h2 style="font-size: 20px; color: var(--text-primary); margin-bottom: 24px;">Course Performance</h2>
+                <div class="analytics-card">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <th style="text-align: left; padding: 16px; color: var(--text-secondary);">Course</th>
+                                <th style="text-align: left; padding: 16px; color: var(--text-secondary);">Students</th>
+                                <th style="text-align: left; padding: 16px; color: var(--text-secondary);">Response Rate
+                                </th>
+                                <th style="text-align: left; padding: 16px; color: var(--text-secondary);">Avg Score
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <td style="padding: 16px; color: var(--text-primary);">CS101 - Intro to Programming</td>
+                                <td style="padding: 16px; color: var(--text-primary);">64</td>
+                                <td style="padding: 16px; color: var(--text-primary);">88%</td>
+                                <td style="padding: 16px; color: var(--text-primary);">4.7</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--card-border);">
+                                <td style="padding: 16px; color: var(--text-primary);">CS202 - Data Structures</td>
+                                <td style="padding: 16px; color: var(--text-primary);">48</td>
+                                <td style="padding: 16px; color: var(--text-primary);">75%</td>
+                                <td style="padding: 16px; color: var(--text-primary);">4.4</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 16px; color: var(--text-primary);">CS305 - Algorithms</td>
+                                <td style="padding: 16px; color: var(--text-primary);">30</td>
+                                <td style="padding: 16px; color: var(--text-primary);">82%</td>
+                                <td style="padding: 16px; color: var(--text-primary);">4.5</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 3. MY REFLECTION -->
+            <section id="feedback" class="section-content">
+                <h2 style="font-size: 20px; color: var(--text-primary); margin-bottom: 16px;">Self-Reflection & Action
+                    Plan</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 32px; max-width: 700px;">
+                    Based on the student feedback and performance metrics, please provide your reflection on this
+                    semester's teaching performance and outline any changes you plan to implement for the next term.
+                </p>
+
+                <div class="feedback-form">
+                    <form id="reflectionForm" onsubmit="handleReflectionSubmit(event)">
+                        <div class="form-group">
+                            <label class="form-label">Evaluation Agreement</label>
+                            <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 8px;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500;">
+                                    <input type="radio" name="agreement" value="agree" checked
+                                        style="accent-color: var(--accent-primary); width: 18px; height: 18px;">
+                                    I agree with this result
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary); font-weight: 500;">
+                                    <input type="radio" name="agreement" value="disagree"
+                                        style="accent-color: var(--accent-primary); width: 18px; height: 18px;">
+                                    I disagree with this result
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">What went well this semester?</label>
+                            <textarea class="form-textarea"
+                                placeholder="Highlight successful teaching strategies, engaging topics, etc..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Areas for Improvement</label>
+                            <textarea class="form-textarea"
+                                placeholder="Identify areas where student feedback suggests a need for change..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Action Plan for Next Term</label>
+                            <textarea class="form-textarea"
+                                placeholder="Specific steps you will take to address the areas for improvement..."></textarea>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end;">
+                            <button type="submit" class="btn-submit">Save Reflection</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="instructor.js"></script>
+</body>
+
+</html>
