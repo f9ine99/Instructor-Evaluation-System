@@ -19,7 +19,7 @@ This project currently consists of the client-side interface. All data interacti
 Since this is a frontend-only project, you don't need to install any dependencies:
 1.  Clone the repository:
     ```bash
-    git clone [https://github.com/f9ine99/instructor-evaluation-system.git](https://github.com/f9ine99/instructor-evaluation-system.git)
+    git clone https://github.com/f9ine99/instructor-evaluation-system.git
     ```
 2.  Open `index.html` in any modern web browser.
 
