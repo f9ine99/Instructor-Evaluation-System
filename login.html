@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Student Login - Instructor Evaluation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Modern Login Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(var(--accent-primary-rgb), 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(var(--accent-primary-rgb), 0.08), transparent 25%);
+            min-height: 100vh;
+            overflow: hidden;
+            /* Prevent scrollbars from decorative elements */
+        }
+
+        .theme-toggle-login {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 10;
+        }
+
+        /* Animated Background Shapes */
+        .bg-shape {
+            position: absolute;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            top: -10%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(var(--accent-primary-rgb), 0.2) 0%, transparent 70%);
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(var(--accent-primary-rgb), 0.15) 0%, transparent 70%);
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            25% {
+                transform: translate(20px, 30px);
+            }
+
+            50% {
+                transform: translate(-20px, 10px);
+            }
+
+            75% {
+                transform: translate(10px, -20px);
+            }
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            max-width: 440px;
+            width: 100%;
+            background: rgba(var(--card-bg-rgb), 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            /* Highlight top border */
+            border-radius: 32px;
+            padding: 48px;
+            box-shadow:
+                0 32px 64px -12px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: cardEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle shine effect on card */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.03), transparent);
+            transform: skewX(-25deg);
+            pointer-events: none;
+        }
+
+        @keyframes cardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: white;
+            font-size: 36px;
+            box-shadow: 0 16px 32px -8px rgba(var(--accent-primary-rgb), 0.5);
+            animation: logoFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .login-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        /* Modern Role Selector */
+        .role-selector {
+            display: flex;
+            background: var(--bg-tertiary);
+            padding: 6px;
+            border-radius: 16px;
+            margin-bottom: 32px;
+            border: 1px solid var(--card-border);
+            position: relative;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .role-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .role-btn.active {
+            background: var(--card-bg);
+            color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: scale(1.02);
+        }
+
+        /* Form Styling */
+        .form-group {
+            margin-bottom: 24px;
+            animation: fadeInUp 0.5s ease backwards;
+        }
+
+        .form-group:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .form-group:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            margin-left: 4px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 16px 16px 48px;
+            /* Space for icon */
+            border-radius: 16px;
+            background: var(--input-bg);
+            border: 2px solid transparent;
+            /* Transparent border for smooth focus transition */
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+            font-weight: 500;
+        }
+
+        .form-input:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .form-input:focus {
+            background: var(--card-bg);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.15);
+            transform: translateY(-1px);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 22px;
+            height: 22px;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        .form-input:focus~.input-icon {
+            color: var(--accent-primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 12px 24px -6px rgba(var(--accent-primary-rgb), 0.4);
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.02em;
+            animation: fadeInUp 0.5s ease backwards;
+            animation-delay: 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px -8px rgba(var(--accent-primary-rgb), 0.5);
+        }
+
+        .login-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .forgot-link {
+            display: inline-block;
+            margin-top: 28px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-bottom: 1px solid transparent;
+            animation: fadeInUp 0.5s ease backwards;
+            animation-delay: 0.4s;
+        }
+
+        .forgot-link:hover {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+
+        /* Error Message */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        @keyframes shake {
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .modal-contact {
+            background: var(--input-bg);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-contact-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .modal-contact-info {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background Shapes -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle theme-toggle-login" id="themeToggle" aria-label="Toggle theme">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <svg class="moon-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+    </button>
+
+    <div class="login-container">
+        <div class="login-card card">
+            <!-- Welcome Message -->
+            <div class="welcome-message">
+                <div class="welcome-icon">🎓</div>
+                <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0;">Welcome Back!</h3>
+                <p style="font-size: 14px; color: var(--text-secondary); margin: 8px 0 0 0;">Please login to access the
+                    system</p>
+            </div>
+
+            <!-- Login Header -->
+            <div class="login-header">
+                <h1 class="login-title" id="loginTitle">Student Login</h1>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="role-selector">
+                <button type="button" class="role-btn active" onclick="switchRole('student')">Student</button>
+                <button type="button" class="role-btn" onclick="switchRole('instructor')">Instructor</button>
+                <button type="button" class="role-btn" onclick="switchRole('admin')">Admin</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username" class="form-label" id="usernameLabel">Student ID</label>
+                    <input type="text" id="username" class="form-input" placeholder="Enter your student ID" required
+                        autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" class="form-input" placeholder="Enter your password"
+                            required autocomplete="current-password" style="padding-right: 40px;">
+                        <button type="button" id="togglePassword" aria-label="Toggle password visibility"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0; display: flex; align-items: center;">
+                            <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" style="width: 20px; height: 20px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" style="width: 20px; height: 20px; display: none;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="capsLockWarning"
+                        style="display: none; color: #f59e0b; font-size: 13px; margin-top: 8px; align-items: center; gap: 6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            style="width: 16px; height: 16px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Caps Lock is ON
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="error-message">
+                    Invalid credentials. Please try again.
+                </div>
+
+                <button type="submit" class="login-btn">
+                    Login
+                </button>
+            </form>
+
+            <!-- Footer Note -->
+            <div style="margin-top: var(--space-xl); text-align: center;">
+                <a href="#" id="forgotPasswordLink"
+                    style="font-size: 14px; color: var(--accent-primary); text-decoration: none; font-weight: 600; transition: var(--transition);">
+                    Forgot Password?
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal-overlay" id="forgotPasswordModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="modal-header">
+                <div class="modal-icon">🔑</div>
+                <h2 class="modal-title">Forgot Your Password?</h2>
+            </div>
+
+            <div class="modal-body">
+                <p>No worries! Please contact the admin team for assistance with your password reset.</p>
+            </div>
+
+            <div class="modal-contact">
+                <div class="modal-contact-title">📧 Contact Information</div>
+                <div class="modal-contact-info">HOPE Instructor Evaluation Admin</div>
+            </div>
+
+            <button class="modal-btn" id="modalOkBtn">Got It</button>
+        </div>
+    </div>
+    <script> // Theme Management
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                updateThemeIcon(true);
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            updateThemeIcon(isLight);
+        }
+
+        function updateThemeIcon(isLight) {
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+
+            if (isLight) {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+
+            else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        // Initialize theme
+        loadTheme();
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+        // Password Toggle Logic
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const eyeOpenIcon = document.querySelector('.eye-open');
+        const eyeClosedIcon = document.querySelector('.eye-closed');
+        const capsLockWarning = document.getElementById('capsLockWarning');
+
+        togglePasswordBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            if (type === 'text') {
+                eyeOpenIcon.style.display = 'none';
+                eyeClosedIcon.style.display = 'block';
+            }
+
+            else {
+                eyeOpenIcon.style.display = 'block';
+                eyeClosedIcon.style.display = 'none';
+            }
+        });
+
+        // Caps Lock Logic
+        passwordInput.addEventListener('keyup', (e) => {
+            if (e.getModifierState('CapsLock')) {
+                capsLockWarning.style.display = 'flex';
+            }
+
+            else {
+                capsLockWarning.style.display = 'none';
+            }
+        });
+
+        // Also check on click/focus in case it was already on
+        passwordInput.addEventListener('focus', (e) => {
+            if (e.getModifierState && e.getModifierState('CapsLock')) {
+                capsLockWarning.style.display = 'flex';
+            }
+        });
+
+        // Role Management
+        let currentRole = 'student';
+
+        function switchRole(role) {
+            currentRole = role;
+
+            // Update Buttons
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.classList.remove('active');
+
+                if (btn.textContent.toLowerCase() === role) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update UI
+            const title = document.getElementById('loginTitle');
+            const label = document.getElementById('usernameLabel');
+            const input = document.getElementById('username');
+
+            if (role === 'student') {
+                title.textContent = 'Student Login';
+                label.textContent = 'Student ID';
+                input.placeholder = 'Enter your student ID';
+            }
+
+            else if (role === 'instructor') {
+                title.textContent = 'Instructor Login';
+                label.textContent = 'Username';
+                input.placeholder = 'Enter your username';
+            }
+
+            else if (role === 'admin') {
+                title.textContent = 'Admin Login';
+                label.textContent = 'Username';
+                input.placeholder = 'Enter your username';
+            }
+        }
+
+        // Login Form Handler
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Simple validation (in real app, this would authenticate with backend)
+            if (username.trim() && password.trim()) {
+                // Store login status
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userRole', currentRole);
+                sessionStorage.setItem('username', username);
+
+                // Redirect based on role
+                if (currentRole === 'student') {
+                    window.location.href = 'index.html';
+                }
+
+                else if (currentRole === 'instructor') {
+                    window.location.href = 'instructor.html';
+                }
+
+                else if (currentRole === 'admin') {
+                    window.location.href = 'admin.html';
+                }
+            }
+
+            else {
+                // Show error
+                errorMessage.classList.add('show');
+
+                setTimeout(() => {
+                    errorMessage.classList.remove('show');
+                }
+
+                    , 3000);
+            }
+        });
+
+        // Check if already logged in (Optional: might want to skip this if testing multiple roles)
+        // if (sessionStorage.getItem('isLoggedIn') === 'true') {
+        //     // Redirect based on stored role
+        //     const role = sessionStorage.getItem('userRole') || 'student';
+        //     if (role === 'student') window.location.href = 'index.html';
+        //     else if (role === 'instructor') window.location.href = 'instructor.html';
+        //     else if (role === 'admin') window.location.href = 'admin.html';
+        // }
+
+        // Forgot Password Handler
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const modalOkBtn = document.getElementById('modalOkBtn');
+
+        document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.classList.add('show');
+        });
+
+        // Close modal handlers
+        closeModalBtn.addEventListener('click', () => {
+            forgotPasswordModal.classList.remove('show');
+        });
+
+        modalOkBtn.addEventListener('click', () => {
+            forgotPasswordModal.classList.remove('show');
+        });
+
+        // Close modal when clicking outside
+        forgotPasswordModal.addEventListener('click', (e) => {
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordModal.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+
+</html>
