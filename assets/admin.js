@@ -63,9 +63,10 @@ const mockData = {
         { name: 'Dr. Emily Davis', dept: 'Architecture', designation: 'Assistant Professor', status: 'On Leave' }
     ],
     courses: [
-        { name: 'CS101 - Intro to Programming', instructor: 'Dr. Sarah Johnson', status: 'Active' },
-        { name: 'ENG202 - Advanced Composition', instructor: 'Prof. Michael Chen', status: 'Active' },
-        { name: 'MATH301 - Linear Algebra', instructor: 'Dr. Emily Davis', status: 'Active' }
+        { name: 'CS101 - Intro to Programming', instructor: 'Dr. Sarah Johnson', dept: 'Computer Science', program: 'BSc CS', year: '1st Year', semester: 'I', academicYear: '2024', status: 'Active' },
+        { name: 'ENG202 - Advanced Composition', instructor: 'Prof. Michael Chen', dept: 'English Literature', program: 'BA English', year: '2nd Year', semester: 'II', academicYear: '2024', status: 'Active' },
+        { name: 'MATH301 - Linear Algebra', instructor: 'Dr. Emily Davis', dept: 'Mathematics', program: 'BSc Math', year: '3rd Year', semester: 'I', academicYear: '2024', status: 'Active' },
+        { name: 'Web Programming', instructor: 'Mr X', dept: 'Computer Science', program: 'BSc CS', year: '3rd Year', semester: 'I', academicYear: '2025', status: 'Active' }
     ],
     departments: [
         { name: 'Computer Science', head: 'Dr. Alan Turing', facultyCount: 12, status: 'Active' },
@@ -74,6 +75,11 @@ const mockData = {
     programs: [
         { name: 'B.Sc. Computer Science', duration: '4 Years', dept: 'Computer Science', status: 'Active' },
         { name: 'B.A. English', duration: '3 Years', dept: 'English Literature', status: 'Active' }
+    ],
+    users: [
+        { username: 'admin', name: 'System Admin', role: 'Admin', status: 'Active' },
+        { username: '2021001', name: 'John Doe', role: 'Student', status: 'Active' },
+        { username: 'sarah.j', name: 'Dr. Sarah Johnson', role: 'Instructor', status: 'Active' }
     ]
 };
 
@@ -104,11 +110,13 @@ function renderTable() {
     if (currentTab === 'faculty') {
         columns = ['Name', 'Department', 'Designation', 'Status', 'Actions'];
     } else if (currentTab === 'courses') {
-        columns = ['Course Name', 'Instructor', 'Status', 'Actions'];
+        columns = ['Course Title', 'Faculty Member', 'Department', 'Program', 'Year', 'Semester', 'Academic Year', 'Status', 'Actions'];
     } else if (currentTab === 'departments') {
         columns = ['Department Name', 'Head of Dept', 'Faculty Count', 'Status', 'Actions'];
     } else if (currentTab === 'programs') {
         columns = ['Program Name', 'Duration', 'Department', 'Status', 'Actions'];
+    } else if (currentTab === 'users') {
+        columns = ['Username', 'Full Name', 'Role', 'Status', 'Actions'];
     }
 
     // Render Headers
@@ -136,6 +144,11 @@ function renderTable() {
             tr.innerHTML = `
                 <td>${item.name}</td>
                 <td>${item.instructor}</td>
+                <td>${item.dept}</td>
+                <td>${item.program}</td>
+                <td>${item.year}</td>
+                <td>${item.semester}</td>
+                <td>${item.academicYear}</td>
                 <td><span class="status-badge ${item.status === 'Active' ? 'status-active' : 'status-pending'}">${item.status}</span></td>
                 <td>${getActionButtons()}</td>
             `;
@@ -155,17 +168,30 @@ function renderTable() {
                 <td><span class="status-badge ${item.status === 'Active' ? 'status-active' : 'status-pending'}">${item.status}</span></td>
                 <td>${getActionButtons()}</td>
             `;
+        } else if (currentTab === 'users') {
+            tr.innerHTML = `
+                <td>${item.username}</td>
+                <td>${item.name}</td>
+                <td>${item.role}</td>
+                <td><span class="status-badge ${item.status === 'Active' ? 'status-active' : 'status-pending'}">${item.status}</span></td>
+                <td>${getActionButtons(true)}</td>
+            `;
         }
 
         tableBody.appendChild(tr);
     });
 }
 
-function getActionButtons() {
+function getActionButtons(isUser = false) {
     return `
-        <button style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-right: 8px;">✏️</button>
-        <button style="background: none; border: none; color: #ef4444; cursor: pointer;">🗑️</button>
+        <button style="background: none; border: none; color: var(--text-secondary); cursor: pointer; margin-right: 8px;" title="Edit">✏️</button>
+        ${isUser ? `<button onclick="resetPassword()" style="background: none; border: none; color: var(--accent-primary); cursor: pointer; margin-right: 8px;" title="Reset Password">🔑</button>` : ''}
+        <button style="background: none; border: none; color: #ef4444; cursor: pointer;" title="Delete">🗑️</button>
     `;
+}
+
+function resetPassword() {
+    alert('Password reset link has been generated and sent to the user.');
 }
 
 // Modal Logic
@@ -180,12 +206,16 @@ function openModal() {
     // Customize based on tab
     if (currentTab === 'courses') {
         title.textContent = 'Add New Course';
-        document.getElementById('courseNameInput').parentElement.style.display = 'block';
-        document.getElementById('instructorNameInput').parentElement.style.display = 'block';
+        document.getElementById('courseFields').style.display = 'block';
+        document.getElementById('userFields').style.display = 'none';
+    } else if (currentTab === 'users') {
+        title.textContent = 'Add New User';
+        document.getElementById('courseFields').style.display = 'none';
+        document.getElementById('userFields').style.display = 'block';
     } else {
-        // For prototype, we only implemented Course adding fully as requested
-        title.textContent = `Add New ${currentTab.slice(0, -1)}`; // Remove 's'
-        // In a real app, we would dynamically show/hide inputs here
+        title.textContent = `Add New ${currentTab.slice(0, -1)}`;
+        document.getElementById('courseFields').style.display = 'none';
+        document.getElementById('userFields').style.display = 'none';
     }
 
     modal.style.display = 'flex';
@@ -200,21 +230,42 @@ function handleFormSubmit(e) {
 
     if (currentTab === 'courses') {
         const courseName = document.getElementById('courseNameInput').value;
-        const instructorName = document.getElementById('instructorNameInput').value;
+        const facultyMember = document.getElementById('facultyMemberInput').value;
+        const department = document.getElementById('departmentInput').value;
+        const program = document.getElementById('programInput').value;
+        const year = document.getElementById('yearInput').value;
+        const semester = document.getElementById('semesterInput').value;
+        const academicYear = document.getElementById('academicYearInput').value;
 
         mockData.courses.push({
             name: courseName,
-            instructor: instructorName,
+            instructor: facultyMember,
+            dept: department,
+            program: program,
+            year: year,
+            semester: semester,
+            academicYear: academicYear,
             status: 'Active'
         });
 
         renderTable();
         closeModal();
+    } else if (currentTab === 'users') {
+        const username = document.getElementById('userInput').value;
+        const name = document.getElementById('userNameInput').value;
+        const role = document.getElementById('userRoleInput').value;
 
-        // Show success message (optional)
-        // alert('Course added successfully!');
+        mockData.users.push({
+            username: username,
+            name: name,
+            role: role,
+            status: 'Active'
+        });
+
+        renderTable();
+        closeModal();
     } else {
-        alert('This feature is only fully implemented for Courses in this prototype.');
+        alert('This feature is only fully implemented for Courses and Users in this prototype.');
         closeModal();
     }
 }
