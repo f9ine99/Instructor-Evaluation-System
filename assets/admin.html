@@ -593,6 +593,7 @@
                     <button class="tab-btn" onclick="switchTab(this, 'courses')">Courses</button>
                     <button class="tab-btn" onclick="switchTab(this, 'departments')">Departments</button>
                     <button class="tab-btn" onclick="switchTab(this, 'programs')">Programs</button>
+                    <button class="tab-btn" onclick="switchTab(this, 'users')">Users</button>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
@@ -683,19 +684,85 @@
             style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: fadeInDown 0.3s ease;">
             <h2 id="modalTitle" style="margin-bottom: 24px; color: var(--text-primary);">Add New Course</h2>
             <form id="addForm" onsubmit="handleFormSubmit(event)">
-                <div style="margin-bottom: 16px;">
-                    <label
-                        style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Course
-                        Name</label>
-                    <input type="text" id="courseNameInput" required
-                        style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                <div id="userFields" style="display: none;">
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Username</label>
+                        <input type="text" id="userInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Full
+                            Name</label>
+                        <input type="text" id="userNameInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Role</label>
+                        <select id="userRoleInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                            <option value="Student">Student</option>
+                            <option value="Instructor">Instructor</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Password</label>
+                        <input type="password" id="userPasswordInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
                 </div>
-                <div style="margin-bottom: 24px;">
-                    <label
-                        style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Instructor
-                        Name</label>
-                    <input type="text" id="instructorNameInput" required
-                        style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                <div id="courseFields">
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Course
+                            Title</label>
+                        <input type="text" id="courseNameInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Faculty
+                            Member</label>
+                        <input type="text" id="facultyMemberInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Department</label>
+                        <input type="text" id="departmentInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Program</label>
+                        <input type="text" id="programInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label
+                                style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Year</label>
+                            <input type="text" id="yearInput"
+                                style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                        </div>
+                        <div>
+                            <label
+                                style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Semester</label>
+                            <input type="text" id="semesterInput"
+                                style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 24px;">
+                        <label
+                            style="display: block; color: var(--text-secondary); margin-bottom: 8px; font-size: 14px;">Academic
+                            Year</label>
+                        <input type="text" id="academicYearInput"
+                            style="width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-primary); outline: none;">
+                    </div>
                 </div>
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" onclick="closeModal()"
