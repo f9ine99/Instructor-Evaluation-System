@@ -24,7 +24,7 @@ Since this is a frontend-only project, you don't need to install any dependencie
 2.  Open `index.html` in any modern web browser.
 
 ## 🗺️ Roadmap
-- [ ] Implement backend logic (Node.js/Express or Python/Django).
+- [ ] Implement backend logic (Node.js/Express or Python/FastAPI).
 - [ ] Connect to a database (PostgreSQL or MongoDB) to store evaluation results.
 - [ ] Add User Authentication (Student/Admin login).
 - [ ] Data visualization for evaluation statistics.
