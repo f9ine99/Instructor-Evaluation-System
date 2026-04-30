@@ -1,0 +1,128 @@
+/* Evaluation Form Styles */
+.course-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+}
+
+.info-item {
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  transition: var(--transition);
+}
+
+.info-item__label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+/* Question Items */
+.question {
+  padding: var(--space-lg);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.question:hover {
+  background: var(--input-bg);
+  border-color: var(--accent-primary);
+  transform: translateX(4px);
+}
+
+/* Rating Group */
+.rating-group {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.rating-btn {
+  appearance: none;
+  background: var(--input-bg);
+  border: 2px solid var(--input-border);
+  border-radius: var(--radius-full);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.rating-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+/* Textarea & Inputs */
+.comments__textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-md);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  resize: vertical;
+  outline: none;
+  transition: var(--transition);
+}
+
+.comments__textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Login Form Specifics */
+.login-card {
+  max-width: 450px;
+  width: 100%;
+  margin: 100px auto;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  outline: none;
+}

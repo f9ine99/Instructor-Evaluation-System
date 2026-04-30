@@ -222,7 +222,7 @@ if (logoutBtn) {
             sessionStorage.removeItem('studentId');
 
             // Redirect to login page
-            window.location.href = 'login.html';
+            window.location.href = '../student/student-login.html';
         }
     });
 }

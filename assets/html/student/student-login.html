@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>HR Login - Instructor Evaluation</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Student Login - Instructor Evaluation</title>
+    <link rel="stylesheet" href="../../css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* Reusing login styles */
@@ -184,7 +184,7 @@
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
 
-    <a href="home.html" class="back-link">
+    <a href="../common/home.html" class="back-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -209,22 +209,22 @@
             <div class="login-header">
                 <div style="margin-bottom: 24px; display: flex; justify-content: center;">
                     <div
-                        style="width: 80px; height: 80px; background: rgba(99, 102, 241, 0.1); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
+                        style="width: 80px; height: 80px; background: rgba(var(--accent-primary-rgb), 0.1); border-radius: 24px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
-                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                            <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
                         </svg>
                     </div>
                 </div>
-                <h1 class="login-title">HR Login</h1>
-                <p style="color: var(--text-secondary);">Administrative access</p>
+                <h1 class="login-title">Student Login</h1>
+                <p style="color: var(--text-secondary);">Access your evaluation dashboard</p>
             </div>
 
             <form id="loginForm">
                 <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" id="username" class="form-input" placeholder="Enter your username" required>
+                    <label class="form-label">Student ID</label>
+                    <input type="text" id="username" class="form-input" placeholder="Enter your student ID" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Password</label>
@@ -260,9 +260,9 @@
             const username = document.getElementById('username').value;
             if (username.trim()) {
                 sessionStorage.setItem('isLoggedIn', 'true');
-                sessionStorage.setItem('userRole', 'hr');
+                sessionStorage.setItem('userRole', 'student');
                 sessionStorage.setItem('username', username);
-                window.location.href = 'hr.html';
+                window.location.href = '../common/form-index.html';
             }
         });
     </script>
