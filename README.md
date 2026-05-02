@@ -33,7 +33,7 @@ Instructor-Evaluation-System/
 │       └── admin.php                # User/course/dept management
 ├── database/
 │   ├── schema.sql                   # Full DDL + default question templates
-│   ├── clear_data.sql               # Truncate all data except default_questions
+│   ├── clear_data.sql               # Clear all data except default_questions
 │   └── seed.sql                     # Placeholder (no demo data; see file)
 ├── .env.example                     # Database config template
 ├── .htaccess                        # Apache security rules
