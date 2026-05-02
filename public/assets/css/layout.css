@@ -1,0 +1,173 @@
+/* Modern Floating Pill Navbar */
+.navbar-container {
+  position: fixed;
+  top: 16px;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.navbar-inner {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 1120px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.84) 0%, rgba(30, 41, 59, 0.78) 100%);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 8px 10px 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow:
+    0 16px 40px rgba(2, 6, 23, 0.34),
+    0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  transition: var(--transition-normal), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.navbar-inner:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 20px 48px rgba(2, 6, 23, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.16) inset;
+}
+
+html.light-mode .navbar-inner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(248, 250, 252, 0.92) 100%);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+html.light-mode .navbar-inner:hover {
+  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+
+.logo:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+html.light-mode .logo:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.nav-link:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html.light-mode .nav-link:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.nav-pill-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 4px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 16px rgba(2, 6, 23, 0.2) inset;
+}
+
+html.light-mode .nav-pill-actions {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) inset;
+}
+
+/* Dashboard Header (Non-floating) */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2xl);
+  gap: var(--space-lg);
+}
+
+.header__title {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+}
+
+@media (max-width: 768px) {
+  .navbar-inner {
+    padding: 6px 6px 6px 12px;
+    gap: 10px;
+  }
+  .nav-links { display: none; }
+  .logo {
+    font-size: 16px;
+    padding: 7px 10px;
+  }
+  .nav-actions {
+    gap: 10px;
+  }
+  
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+}
