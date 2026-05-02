@@ -15,6 +15,7 @@ $icon = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode'); } catch (e) {}</script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title><?= $title ?> | HOPE System</title>
     <link rel="stylesheet" href="<?= $assetBase ?>/css/variables.css">

@@ -12,6 +12,7 @@ $assetBase = '../../assets';
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode'); } catch (e) {}</script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Student Login | HOPE System</title>
     <link rel="stylesheet" href="<?= $assetBase ?>/css/variables.css">

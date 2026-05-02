@@ -1076,11 +1076,327 @@ button.nav-item {
   margin-bottom: 20px;
 }
 
+.admin-dashboard .admin-toolbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .admin-dashboard .section-heading {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* Primary “Add user” CTA */
+.admin-dashboard .admin-add-user-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 12px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  box-shadow:
+    0 4px 16px rgba(var(--accent-primary-rgb), 0.38),
+    0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.admin-dashboard .admin-add-user-cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 8px 28px rgba(var(--accent-primary-rgb), 0.48),
+    0 1px 0 rgba(255, 255, 255, 0.16) inset;
+}
+
+.admin-dashboard .admin-add-user-cta:active {
+  transform: translateY(0);
+}
+
+.admin-dashboard .admin-add-user-cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent-primary) 35%, transparent),
+    0 4px 16px rgba(var(--accent-primary-rgb), 0.38);
+}
+
+.admin-dashboard .admin-add-user-cta__glow {
+  position: absolute;
+  inset: -1px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 40%);
+  pointer-events: none;
+}
+
+.admin-dashboard .admin-add-user-cta__icon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.admin-dashboard .admin-add-user-cta__label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-dashboard .admin-add-user-cta__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.admin-dashboard .admin-add-user-cta__hint {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.88;
+  line-height: 1.25;
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard .admin-add-user-cta__hint {
+    display: none;
+  }
+
+  .admin-dashboard .admin-add-user-cta {
+    padding: 10px 14px 10px 10px;
+  }
+}
+
+/* Split CTAs: student / instructor / staff (Users tab) */
+.admin-dashboard .admin-add-student-cta,
+.admin-dashboard .admin-add-instructor-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 10px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.admin-dashboard .admin-add-student-cta {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #0d9488 0%, #059669 100%);
+  box-shadow:
+    0 4px 16px rgba(13, 148, 136, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+}
+
+.admin-dashboard .admin-add-student-cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 8px 26px rgba(13, 148, 136, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.14) inset;
+}
+
+.admin-dashboard .admin-add-student-cta:active {
+  transform: translateY(0);
+}
+
+.admin-dashboard .admin-add-student-cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--success) 40%, transparent),
+    0 4px 16px rgba(13, 148, 136, 0.35);
+}
+
+.admin-dashboard .admin-add-student-cta__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.admin-dashboard .admin-add-instructor-cta {
+  border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--card-border));
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--warning) 8%, var(--card-bg));
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.12);
+}
+
+.admin-dashboard .admin-add-instructor-cta:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--warning) 70%, var(--card-border));
+  background: color-mix(in srgb, var(--warning) 14%, var(--card-bg));
+}
+
+.admin-dashboard .admin-add-instructor-cta:active {
+  transform: translateY(0);
+}
+
+.admin-dashboard .admin-add-instructor-cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--warning) 35%, transparent),
+    0 2px 12px rgba(245, 158, 11, 0.15);
+}
+
+.admin-dashboard .admin-add-instructor-cta__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--warning) 22%, transparent);
+  color: var(--warning);
+  flex-shrink: 0;
+}
+
+.admin-dashboard .admin-add-student-cta__label,
+.admin-dashboard .admin-add-instructor-cta__label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-dashboard .admin-add-student-cta__title,
+.admin-dashboard .admin-add-instructor-cta__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.admin-dashboard .admin-add-student-cta__hint,
+.admin-dashboard .admin-add-instructor-cta__hint {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1.25;
+}
+
+.admin-dashboard .admin-add-instructor-cta__hint {
+  color: var(--text-secondary);
+}
+
+.admin-dashboard .admin-add-staff-link {
+  align-self: center;
+  padding: 8px 10px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.admin-dashboard .admin-add-staff-link:hover {
+  color: var(--accent-primary);
+}
+
+.admin-dashboard .admin-add-staff-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard .admin-add-student-cta__hint,
+  .admin-dashboard .admin-add-instructor-cta__hint {
+    display: none;
+  }
+
+  .admin-dashboard .admin-add-student-cta,
+  .admin-dashboard .admin-add-instructor-cta {
+    padding: 10px 14px 10px 10px;
+  }
+}
+
+.admin-dashboard .admin-modal-lead {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.admin-dashboard .admin-field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.admin-dashboard .admin-enroll-fieldset {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--input-bg) 92%, var(--card-bg));
+}
+
+.admin-dashboard .admin-enroll-legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.admin-dashboard .admin-course-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.admin-dashboard .admin-course-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.admin-dashboard .admin-course-check input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--accent-primary);
+}
+
+.admin-dashboard .admin-modal-surface--user {
+  max-width: 560px;
 }
 
 .admin-dashboard .admin-modal-surface {
@@ -1140,6 +1456,99 @@ button.nav-item {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid var(--card-border);
+}
+
+/* Modal primary: Create user */
+.admin-dashboard .admin-create-user-submit {
+  position: relative;
+  min-width: 168px;
+  min-height: 46px;
+  padding: 11px 22px 11px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  box-shadow:
+    0 4px 18px rgba(var(--accent-primary-rgb), 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.14) inset;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, opacity 0.15s ease;
+}
+
+.admin-dashboard .admin-create-user-submit:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow:
+    0 6px 24px rgba(var(--accent-primary-rgb), 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.18) inset;
+  transform: translateY(-1px);
+}
+
+.admin-dashboard .admin-create-user-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.admin-dashboard .admin-create-user-submit:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent-primary) 28%, transparent),
+    0 4px 18px rgba(var(--accent-primary-rgb), 0.42);
+}
+
+.admin-dashboard .admin-create-user-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.08);
+}
+
+.admin-dashboard .admin-create-user-submit__leading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.admin-dashboard .admin-create-user-submit__spinner {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dean-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.admin-dashboard .admin-create-user-submit.is-loading .admin-create-user-submit__spinner {
+  display: block;
+}
+
+.admin-dashboard .admin-create-user-submit.is-loading .admin-create-user-submit__leading {
+  display: none;
+}
+
+.admin-dashboard .admin-create-user-submit.is-loading .admin-create-user-submit__text {
+  opacity: 0.95;
+}
+
+.admin-dashboard .admin-modal-actions .btn--secondary {
+  min-height: 46px;
+  padding: 11px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .admin-dashboard .table-action-btn {

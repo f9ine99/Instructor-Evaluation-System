@@ -50,20 +50,83 @@ if ($method === 'GET' && $action === 'list') {
             }
             $deptId = $input['department_id'] ?? null;
             $deptId = ($deptId === '' || $deptId === null) ? null : (int) $deptId;
+
+            $needsDept = in_array($role, ['student', 'instructor', 'dean'], true);
+            if ($needsDept && ($deptId === null || $deptId <= 0)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Department is required for students, instructors, and deans.']);
+                exit;
+            }
+
+            // Pre-validate enrollment courses for students (enrollments table) before insert
+            $courseIds = [];
+            if ($role === 'student' && !empty($input['course_ids']) && is_array($input['course_ids'])) {
+                $courseIds = array_values(array_unique(array_filter(array_map('intval', $input['course_ids']), function ($id) {
+                    return $id > 0;
+                })));
+                $chk = $db->prepare('SELECT id, department_id FROM courses WHERE id = ? AND status = "active"');
+                foreach ($courseIds as $cid) {
+                    $chk->execute([$cid]);
+                    $courseRow = $chk->fetch(PDO::FETCH_ASSOC);
+                    if (!$courseRow) {
+                        http_response_code(400);
+                        echo json_encode(['success' => false, 'message' => 'Invalid or inactive course ID: ' . $cid]);
+                        exit;
+                    }
+                    if ($deptId !== null && (int) $courseRow['department_id'] !== (int) $deptId) {
+                        http_response_code(400);
+                        echo json_encode(['success' => false, 'message' => 'Each selected course must belong to the student\'s department.']);
+                        exit;
+                    }
+                }
+            }
+
             $hash = password_hash((string) $input['password'], PASSWORD_BCRYPT);
             $stmt = $db->prepare('INSERT INTO users (username, password_hash, full_name, email, role, department_id, status) VALUES (?,?,?,?,?,?,?)');
+            $db->beginTransaction();
             try {
-                $stmt->execute([$username, $hash, $fullName, $input['email'] ?? null, $role, $deptId, 'active']);
-            } catch (PDOException $e) {
-                if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate') !== false) {
-                    http_response_code(409);
-                    echo json_encode(['success' => false, 'message' => 'That username is already taken.']);
-                    exit;
+                try {
+                    $stmt->execute([$username, $hash, $fullName, $input['email'] ?? null, $role, $deptId, 'active']);
+                } catch (PDOException $e) {
+                    if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate') !== false) {
+                        $db->rollBack();
+                        http_response_code(409);
+                        echo json_encode(['success' => false, 'message' => 'That username is already taken.']);
+                        exit;
+                    }
+                    throw $e;
+                }
+
+                $newId = (int) $db->lastInsertId();
+
+                if ($role === 'student' && count($courseIds) > 0) {
+                    $insEn = $db->prepare('INSERT INTO enrollments (student_id, course_id) VALUES (?, ?)');
+                    foreach ($courseIds as $cid) {
+                        if ($cid <= 0) {
+                            continue;
+                        }
+                        try {
+                            $insEn->execute([$newId, $cid]);
+                        } catch (PDOException $e) {
+                            if (strpos($e->getMessage(), 'Duplicate') !== false) {
+                                continue;
+                            }
+                            throw $e;
+                        }
+                    }
+                }
+
+                $db->commit();
+            } catch (Throwable $e) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
                 }
                 throw $e;
             }
-            AuthService::logAudit(AuthService::getUserId(),'user_created','user',(int)$db->lastInsertId(),"Created user: {$username}");
-            echo json_encode(['success'=>true,'message'=>'User created.','id'=>$db->lastInsertId()]); break;
+
+            AuthService::logAudit(AuthService::getUserId(), 'user_created', 'user', $newId, "Created user: {$username}");
+            echo json_encode(['success' => true, 'message' => 'User created.', 'id' => $newId]);
+            break;
         case 'course':
             $code = trim($input['code'] ?? '');
             $title = trim($input['title'] ?? '');

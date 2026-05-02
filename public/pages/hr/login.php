@@ -15,6 +15,7 @@ $icon = '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode'); } catch (e) {}</script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title><?= $title ?> | HOPE System</title>
     <link rel="stylesheet" href="<?= $assetBase ?>/css/variables.css">

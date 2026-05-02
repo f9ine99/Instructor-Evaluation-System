@@ -66,8 +66,26 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
         <section id="manage" class="section-content" aria-hidden="true">
             <div class="section-toolbar">
                 <h2 class="section-heading">Directory</h2>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                    <button type="button" class="btn-submit" id="btnAddUser" style="display:none;">+ Add user</button>
+                <div class="admin-toolbar-actions">
+                    <button type="button" class="admin-add-student-cta" id="btnAddStudent" style="display:none;" aria-label="Add a student">
+                        <span class="admin-add-student-cta__icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                        </span>
+                        <span class="admin-add-student-cta__label">
+                            <span class="admin-add-student-cta__title">Add student</span>
+                            <span class="admin-add-student-cta__hint">Dept + optional enrollments</span>
+                        </span>
+                    </button>
+                    <button type="button" class="admin-add-instructor-cta" id="btnAddInstructor" style="display:none;" aria-label="Add an instructor">
+                        <span class="admin-add-instructor-cta__icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        </span>
+                        <span class="admin-add-instructor-cta__label">
+                            <span class="admin-add-instructor-cta__title">Add instructor</span>
+                            <span class="admin-add-instructor-cta__hint">Faculty &amp; department</span>
+                        </span>
+                    </button>
+                    <button type="button" class="admin-add-staff-link" id="btnAddStaff" style="display:none;">Add staff (dean / HR / admin)</button>
                     <button type="button" class="btn-submit" id="btnAddCourse" style="display:none;">+ Add course</button>
                     <button type="button" class="btn-submit" id="btnAddDepartment" style="display:none;">+ Add department</button>
                 </div>
@@ -89,14 +107,19 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
     </main>
 </div>
 
-<!-- Create user -->
+<!-- Create user (mode: student | instructor | staff) -->
 <div id="modalUser" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalUserTitle" aria-hidden="true">
-    <div class="admin-modal-surface">
-        <h2 id="modalUserTitle">Add user</h2>
+    <div class="admin-modal-surface admin-modal-surface--user">
+        <h2 id="modalUserTitle">Add student</h2>
+        <p class="admin-modal-lead" id="modalUserLead">Students belong to a department; you can enroll them in active courses in that department (enrollments).</p>
         <form id="formCreateUser">
+            <input type="hidden" id="cuUserMode" value="student" autocomplete="off">
+            <input type="hidden" id="cuRole" name="role" value="student">
+
             <div class="form-group">
                 <label class="form-label" for="cuUsername">Username <span style="color:var(--error);">*</span></label>
                 <input class="form-input" id="cuUsername" name="username" required autocomplete="off" maxlength="50">
+                <p class="admin-field-hint" id="cuUsernameHint">Often a student ID (e.g. 2021001). Unique across the system.</p>
             </div>
             <div class="form-group">
                 <label class="form-label" for="cuPassword">Password <span style="color:var(--error);">*</span></label>
@@ -110,25 +133,39 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
                 <label class="form-label" for="cuEmail">Email</label>
                 <input type="email" class="form-input" id="cuEmail" name="email" maxlength="150">
             </div>
-            <div class="form-group">
-                <label class="form-label" for="cuRole">Role <span style="color:var(--error);">*</span></label>
-                <select class="form-select" id="cuRole" name="role" required>
-                    <option value="student">Student</option>
-                    <option value="instructor">Instructor</option>
+
+            <div class="form-group" id="cuStaffRoleWrap" style="display:none;">
+                <label class="form-label" for="cuRoleStaff">Role <span style="color:var(--error);">*</span></label>
+                <select class="form-select" id="cuRoleStaff">
                     <option value="dean">Dean</option>
                     <option value="hr">HR</option>
                     <option value="admin">Admin</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="cuDept">Department</label>
+
+            <div class="form-group" id="cuDeptWrap">
+                <label class="form-label" for="cuDept"><span id="cuDeptLabel">Home department</span> <span style="color:var(--error);">*</span></label>
                 <select class="form-select" id="cuDept" name="department_id">
-                    <option value="">— None —</option>
+                    <option value="">Select…</option>
                 </select>
+                <p class="admin-field-hint" id="cuDeptHint">Required for students, instructors, and deans (see users.department_id in schema).</p>
             </div>
+
+            <fieldset class="admin-enroll-fieldset" id="cuStudentEnrollmentWrap" style="display:none;">
+                <legend class="admin-enroll-legend">Initial enrollments</legend>
+                <p class="admin-field-hint" style="margin-top:0;">Optional. Creates rows in <code style="font-size:11px;">enrollments</code> (student_id, course_id). Only courses in the student’s department are listed.</p>
+                <div id="cuCourseChecks" class="admin-course-checks"></div>
+            </fieldset>
+
             <div class="admin-modal-actions">
-                <button type="button" class="btn btn--secondary" data-close-modal="modalUser">Cancel</button>
-                <button type="submit" class="btn-submit">Create user</button>
+                <button type="button" class="btn btn--secondary" id="cuCancelBtn" data-close-modal="modalUser">Cancel</button>
+                <button type="submit" class="admin-create-user-submit" id="cuSubmitBtn">
+                    <span class="admin-create-user-submit__spinner" aria-hidden="true"></span>
+                    <span class="admin-create-user-submit__leading" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </span>
+                    <span class="admin-create-user-submit__text" id="cuSubmitText">Create student</span>
+                </button>
             </div>
         </form>
     </div>
@@ -210,7 +247,8 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
 (function () {
     var currentUserId = <?= $currentUserId ?>;
     var currentTab = 'users';
-    var lookups = { departments: [], users: [] };
+    var lookups = { departments: [], users: [], courses: [] };
+    var userModalMode = 'student';
 
     function escapeHtml(s) {
         if (s == null || s === '') return '';
@@ -272,7 +310,15 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
     });
 
     function updateAddButtons() {
-        document.getElementById('btnAddUser').style.display = currentTab === 'users' ? 'inline-flex' : 'none';
+        var onUsers = currentTab === 'users';
+        var show = onUsers ? 'inline-flex' : 'none';
+        var showStaff = onUsers ? 'inline-block' : 'none';
+        var st = document.getElementById('btnAddStudent');
+        var ins = document.getElementById('btnAddInstructor');
+        var sf = document.getElementById('btnAddStaff');
+        if (st) st.style.display = show;
+        if (ins) ins.style.display = show;
+        if (sf) sf.style.display = showStaff;
         document.getElementById('btnAddCourse').style.display = currentTab === 'courses' ? 'inline-flex' : 'none';
         document.getElementById('btnAddDepartment').style.display = currentTab === 'departments' ? 'inline-flex' : 'none';
     }
@@ -319,11 +365,103 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
         });
     });
 
-    document.getElementById('btnAddUser').addEventListener('click', function () {
+    function updateDeptFieldRequired() {
+        var dept = document.getElementById('cuDept');
+        if (!dept) return;
+        if (userModalMode === 'student' || userModalMode === 'instructor') {
+            dept.required = true;
+            return;
+        }
+        if (userModalMode === 'staff') {
+            dept.required = document.getElementById('cuRoleStaff').value === 'dean';
+        }
+    }
+
+    function refreshStudentCourseChecks() {
+        var host = document.getElementById('cuCourseChecks');
+        if (!host || userModalMode !== 'student') return;
+        var deptId = parseInt(document.getElementById('cuDept').value, 10);
+        if (!deptId) {
+            host.innerHTML = '<p class="admin-field-hint">Select a department to list courses for enrollment.</p>';
+            return;
+        }
+        var rows = (lookups.courses || []).filter(function (c) {
+            return parseInt(c.department_id, 10) === deptId && c.status === 'active';
+        });
+        if (!rows.length) {
+            host.innerHTML = '<p class="admin-field-hint">No active courses in this department.</p>';
+            return;
+        }
+        host.innerHTML = rows.map(function (c) {
+            return '<label class="admin-course-check"><input type="checkbox" name="cu_course" value="' + parseInt(c.id, 10) + '"><span>' +
+                escapeHtml(c.code) + ' — ' + escapeHtml(c.title) + ' <span style="opacity:0.75;">(' + escapeHtml(c.semester) + ' ' + escapeHtml(c.academic_year) + ')</span></span></label>';
+        }).join('');
+    }
+
+    function openUserModal(mode) {
         document.getElementById('formCreateUser').reset();
-        fillDepartmentOptions(document.getElementById('cuDept'), true);
+        document.getElementById('cuCourseChecks').innerHTML = '';
+        userModalMode = mode;
+        document.getElementById('cuUserMode').value = mode;
+        fillDepartmentOptions(document.getElementById('cuDept'), false);
+
+        var title = document.getElementById('modalUserTitle');
+        var lead = document.getElementById('modalUserLead');
+        var uHint = document.getElementById('cuUsernameHint');
+        var dLabel = document.getElementById('cuDeptLabel');
+        var dHint = document.getElementById('cuDeptHint');
+        var staffWrap = document.getElementById('cuStaffRoleWrap');
+        var enrollWrap = document.getElementById('cuStudentEnrollmentWrap');
+        var submitText = document.getElementById('cuSubmitText');
+        var roleHidden = document.getElementById('cuRole');
+
+        staffWrap.style.display = mode === 'staff' ? 'block' : 'none';
+        enrollWrap.style.display = mode === 'student' ? 'block' : 'none';
+
+        if (mode === 'student') {
+            roleHidden.value = 'student';
+            title.textContent = 'Add student';
+            lead.textContent = 'Students have a home department (users.department_id). You may enroll them in active courses in that department via the enrollments table.';
+            uHint.textContent = 'Often a student ID (e.g. 2021001). Must be unique.';
+            dLabel.textContent = 'Home department';
+            dHint.textContent = 'Required. Course enrollments below are limited to this department.';
+            dHint.style.display = 'block';
+            submitText.textContent = 'Create student';
+            refreshStudentCourseChecks();
+        } else if (mode === 'instructor') {
+            roleHidden.value = 'instructor';
+            title.textContent = 'Add instructor';
+            lead.textContent = 'Instructors are faculty in a department; they teach courses (courses.instructor_id references users).';
+            uHint.textContent = 'Login username (e.g. sarah.j). Must be unique.';
+            dLabel.textContent = 'Department';
+            dHint.textContent = 'Required. Assigns the instructor to this department for reporting and course alignment.';
+            dHint.style.display = 'block';
+            submitText.textContent = 'Create instructor';
+        } else {
+            roleHidden.value = document.getElementById('cuRoleStaff').value || 'dean';
+            title.textContent = 'Add staff account';
+            lead.textContent = 'Deans require a department; HR and admin may have no department (same as schema conventions).';
+            uHint.textContent = 'Unique username for sign-in.';
+            dLabel.textContent = 'Department';
+            dHint.textContent = 'Required for deans only.';
+            submitText.textContent = 'Create account';
+            updateDeptFieldRequired();
+        }
+        updateDeptFieldRequired();
         setModalOpen('modalUser', true);
         document.getElementById('cuUsername').focus();
+    }
+
+    document.getElementById('btnAddStudent').addEventListener('click', function () { openUserModal('student'); });
+    document.getElementById('btnAddInstructor').addEventListener('click', function () { openUserModal('instructor'); });
+    document.getElementById('btnAddStaff').addEventListener('click', function () { openUserModal('staff'); });
+
+    document.getElementById('cuDept').addEventListener('change', function () {
+        if (userModalMode === 'student') refreshStudentCourseChecks();
+    });
+    document.getElementById('cuRoleStaff').addEventListener('change', function () {
+        document.getElementById('cuRole').value = document.getElementById('cuRoleStaff').value;
+        updateDeptFieldRequired();
     });
     document.getElementById('btnAddCourse').addEventListener('click', function () {
         document.getElementById('formCreateCourse').reset();
@@ -369,6 +507,11 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
             var jU = await rU.json();
             if (rU.ok && jU.success && jU.data) lookups.users = jU.data;
         } catch (e) {}
+        try {
+            var rC = await fetch('/api/admin.php?action=list&entity=courses', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+            var jC = await rC.json();
+            if (rC.ok && jC.success && jC.data) lookups.courses = jC.data;
+        } catch (e) {}
     }
 
     async function postAdmin(payload) {
@@ -386,19 +529,40 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
         return d;
     }
 
+    function setUserModalSubmitting(on) {
+        var sub = document.getElementById('cuSubmitBtn');
+        var can = document.getElementById('cuCancelBtn');
+        if (sub) {
+            sub.disabled = !!on;
+            sub.classList.toggle('is-loading', !!on);
+        }
+        if (can) can.disabled = !!on;
+    }
+
     document.getElementById('formCreateUser').addEventListener('submit', async function (e) {
         e.preventDefault();
+        var role = document.getElementById('cuRole').value;
+        if (userModalMode === 'staff') {
+            role = document.getElementById('cuRoleStaff').value;
+        }
+        var payload = {
+            action: 'create',
+            entity: 'user',
+            username: document.getElementById('cuUsername').value.trim(),
+            password: document.getElementById('cuPassword').value,
+            full_name: document.getElementById('cuFullName').value.trim(),
+            email: document.getElementById('cuEmail').value.trim() || null,
+            role: role,
+            department_id: document.getElementById('cuDept').value || null
+        };
+        if (userModalMode === 'student') {
+            var checked = [].slice.call(document.querySelectorAll('#cuCourseChecks input[name="cu_course"]:checked'));
+            var cids = checked.map(function (x) { return parseInt(x.value, 10); }).filter(function (id) { return !isNaN(id) && id > 0; });
+            if (cids.length) payload.course_ids = cids;
+        }
+        setUserModalSubmitting(true);
         try {
-            await postAdmin({
-                action: 'create',
-                entity: 'user',
-                username: document.getElementById('cuUsername').value.trim(),
-                password: document.getElementById('cuPassword').value,
-                full_name: document.getElementById('cuFullName').value.trim(),
-                email: document.getElementById('cuEmail').value.trim() || null,
-                role: document.getElementById('cuRole').value,
-                department_id: document.getElementById('cuDept').value || null
-            });
+            await postAdmin(payload);
             showToast('User created.', 'success');
             setModalOpen('modalUser', false);
             e.target.reset();
@@ -406,6 +570,8 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
             loadDashboard();
         } catch (err) {
             showToast(err.message || 'Create failed.', 'error');
+        } finally {
+            setUserModalSubmitting(false);
         }
     });
 
