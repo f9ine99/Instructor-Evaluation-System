@@ -50,7 +50,7 @@ class AnonymizationService {
      * Checks:
      * 1. Student is enrolled in the course linked to the evaluation sheet
      * 2. Evaluation sheet is in 'open' status
-     * 3. Current date is within the evaluation window
+     * 3. If end_date is set, it has not passed (start_date does not block after go-live)
      * 4. Student has not already submitted
      * 
      * Returns: ['eligible' => bool, 'reason' => string]
@@ -77,13 +77,14 @@ class AnonymizationService {
             return ['eligible' => false, 'reason' => 'This evaluation is not currently accepting submissions.'];
         }
 
-        // 3. Check time window
-        $now = new DateTime();
-        if ($sheet['start_date'] && new DateTime($sheet['start_date']) > $now) {
-            return ['eligible' => false, 'reason' => 'This evaluation has not started yet.'];
-        }
-        if ($sheet['end_date'] && new DateTime($sheet['end_date']) < $now) {
-            return ['eligible' => false, 'reason' => 'This evaluation has expired.'];
+        // 3. Deadline only — opening time does not block once the sheet is "open".
+        // (start_date schedules initial status when created; transitioning to open is the dean’s go-live.)
+        $now = new DateTime('now');
+        if (!empty($sheet['end_date'])) {
+            $end = new DateTime($sheet['end_date']);
+            if ($end < $now) {
+                return ['eligible' => false, 'reason' => 'This evaluation has expired.'];
+            }
         }
 
         // 4. Check enrollment

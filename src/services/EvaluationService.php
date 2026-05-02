@@ -41,7 +41,18 @@ class EvaluationService {
              VALUES (:title, :description, :dept_id, :course_id, :instructor_id, :created_by, :status, :start_date, :end_date, :academic_year, :semester)'
         );
 
-        $status = (!empty($data['start_date'])) ? 'scheduled' : 'draft';
+        // Students only see status=open. No window → open immediately. Window with future start → scheduled until dean opens;
+        // window that has already started → open.
+        $startVal = $data['start_date'] ?? null;
+        $endVal   = $data['end_date'] ?? null;
+        $hasStart = $startVal !== null && $startVal !== '';
+        $hasEnd   = $endVal !== null && $endVal !== '';
+        if (!$hasStart && !$hasEnd) {
+            $status = 'open';
+        } else {
+            $tStart = strtotime((string) $startVal);
+            $status = ($tStart !== false && $tStart > time()) ? 'scheduled' : 'open';
+        }
 
         $stmt->execute([
             ':title'         => $data['title'],
@@ -113,11 +124,12 @@ class EvaluationService {
     public static function listSheets(array $filters = []): array {
         $db = Database::getConnection();
 
-        $sql = 'SELECT es.*, 
+        $sql = 'SELECT es.*,
                        c.code as course_code, c.title as course_title,
                        d.name as department_name,
                        u.full_name as instructor_name,
-                       (SELECT COUNT(*) FROM submissions s WHERE s.evaluation_sheet_id = es.id) as submission_count
+                       (SELECT COUNT(*) FROM submissions s WHERE s.evaluation_sheet_id = es.id) as submission_count,
+                       (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = es.course_id) as course_enrollment_count
                 FROM evaluation_sheets es
                 JOIN courses c ON es.course_id = c.id
                 JOIN departments d ON es.department_id = d.id
@@ -217,6 +229,58 @@ class EvaluationService {
     // =====================================================
 
     /**
+     * Enrolled students preview for a course (dean/admin create-eval UI).
+     * Deans pass their department id — course must belong to that department.
+     *
+     * @return array{count:int,students:list<array{id:int,full_name:string,username:string}>,list_limit:int}|null
+     */
+    public static function getCourseEnrollmentPreview(int $courseId, ?int $restrictToDepartmentId, int $studentListLimit = 25): ?array {
+        $db = Database::getConnection();
+        $chk = $db->prepare('SELECT department_id, status FROM courses WHERE id = ?');
+        $chk->execute([$courseId]);
+        $row = $chk->fetch(PDO::FETCH_ASSOC);
+        if (!$row || ($row['status'] ?? '') !== 'active') {
+            return null;
+        }
+        if ($restrictToDepartmentId !== null && (int) $row['department_id'] !== (int) $restrictToDepartmentId) {
+            return null;
+        }
+
+        $cntStmt = $db->prepare('SELECT COUNT(*) as c FROM enrollments WHERE course_id = ?');
+        $cntStmt->execute([$courseId]);
+        $total = (int) ($cntStmt->fetch()['c'] ?? 0);
+
+        $studentListLimit = max(5, min(150, $studentListLimit));
+
+        $listStmt = $db->prepare(
+            'SELECT u.id, u.full_name, u.username
+             FROM enrollments e
+             INNER JOIN users u ON u.id = e.student_id AND u.role = \'student\' AND u.status = \'active\'
+             WHERE e.course_id = ?
+             ORDER BY u.full_name ASC, u.username ASC
+             LIMIT ' . $studentListLimit
+        );
+        $listStmt->execute([$courseId]);
+        $students = $listStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['count' => $total, 'students' => $students, 'list_limit' => $studentListLimit];
+    }
+
+    /**
+     * Total enrollment rows for a course offering (basis for evaluation eligibility).
+     */
+    public static function countEnrollmentsForCourse(int $courseId): int {
+        if ($courseId <= 0) {
+            return 0;
+        }
+        $db = Database::getConnection();
+        $stmt = $db->prepare('SELECT COUNT(*) AS c FROM enrollments WHERE course_id = ?');
+        $stmt->execute([$courseId]);
+
+        return (int) (($stmt->fetch(PDO::FETCH_ASSOC) ?: [])['c'] ?? 0);
+    }
+
+    /**
      * Get all open evaluations that a student is eligible to submit
      */
     public static function getEligibleEvaluations(int $studentId): array {
@@ -232,7 +296,7 @@ class EvaluationService {
              JOIN users u ON es.instructor_id = u.id
              JOIN enrollments e ON e.course_id = c.id AND e.student_id = :student_id
              WHERE es.status = :status
-               AND (es.start_date IS NULL OR es.start_date <= NOW())
+               AND c.status = \'active\'
                AND (es.end_date IS NULL OR es.end_date >= NOW())
              ORDER BY es.end_date ASC'
         );

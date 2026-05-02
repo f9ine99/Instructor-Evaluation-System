@@ -135,6 +135,44 @@ class AnalyticsService {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Evaluation sheets that need roster attention: draft / scheduled / open but zero enrollments on the linked course.
+     *
+     * @param int|null $departmentId scope to one department (dean); null = institution (admin)
+     * @return list<array{sheet_id:int,sheet_title:string,sheet_status:string,course_id:int,course_code:string,department_id:int,department_name:string}>
+     */
+    public static function getEvaluationEnrollmentGaps(?int $departmentId = null): array {
+        $db = Database::getConnection();
+
+        $sql = 'SELECT es.id AS sheet_id,
+                       es.title AS sheet_title,
+                       es.status AS sheet_status,
+                       es.course_id AS course_id,
+                       c.code AS course_code,
+                       d.id AS department_id,
+                       d.name AS department_name
+                FROM evaluation_sheets es
+                INNER JOIN courses c ON c.id = es.course_id
+                INNER JOIN departments d ON d.id = es.department_id
+                WHERE es.status IN (\'draft\', \'scheduled\', \'open\')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM enrollments e WHERE e.course_id = es.course_id
+                  )';
+
+        $params = [];
+        if ($departmentId !== null && $departmentId > 0) {
+            $sql .= ' AND es.department_id = :dept';
+            $params[':dept'] = $departmentId;
+        }
+
+        $sql .= ' ORDER BY d.name ASC, es.updated_at DESC LIMIT 50';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // =====================================================
     // DEPARTMENT-LEVEL ANALYTICS
     // =====================================================

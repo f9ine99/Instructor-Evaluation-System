@@ -151,6 +151,24 @@ switch ($action) {
     case 'recent_submissions':
         $deptId = AuthService::hasRole('dean') ? AuthService::getDepartmentId() : null;
         echo json_encode(['success'=>true,'submissions'=>AnalyticsService::getRecentSubmissions((int)($_GET['limit']??10),$deptId)]); break;
+    case 'enrollment_gaps':
+        if (!AuthService::hasRole('admin', 'dean')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            exit;
+        }
+        $gapDept = null;
+        if (AuthService::hasRole('dean')) {
+            $gapDept = AuthService::getDepartmentId();
+            if (!$gapDept || (int) $gapDept <= 0) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No department assigned.']);
+                exit;
+            }
+        }
+        $gaps = AnalyticsService::getEvaluationEnrollmentGaps($gapDept);
+        echo json_encode(['success' => true, 'gaps' => $gaps, 'count' => count($gaps)]);
+        break;
     default:
         http_response_code(400); echo json_encode(['success'=>false,'message'=>'Unknown action']); break;
 }

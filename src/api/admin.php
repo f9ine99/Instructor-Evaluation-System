@@ -37,10 +37,33 @@ if ($method === 'GET' && $action === 'list') {
             echo json_encode(['success' => true, 'data' => $rows, 'role_filter' => $roleFilter === '' ? null : $roleFilter]);
             break;
         case 'courses':
-            $stmt = $db->query('SELECT c.*, d.name as department_name, u.full_name as instructor_name FROM courses c JOIN departments d ON c.department_id=d.id JOIN users u ON c.instructor_id=u.id ORDER BY c.id');
-            echo json_encode(['success'=>true,'data'=>$stmt->fetchAll()]); break;
+            $stmt = $db->query(
+                'SELECT c.*, d.name AS department_name, u.full_name AS instructor_name,
+                        (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id) AS enrollment_count,
+                        CASE
+                            WHEN (SELECT COUNT(*) FROM enrollments ex WHERE ex.course_id = c.id) = 0
+                                 AND EXISTS (
+                                     SELECT 1 FROM evaluation_sheets es
+                                     WHERE es.course_id = c.id AND es.status IN (\'draft\', \'scheduled\', \'open\')
+                                 )
+                            THEN 1 ELSE 0
+                        END AS evaluation_roster_gap
+                 FROM courses c
+                 JOIN departments d ON c.department_id = d.id
+                 JOIN users u ON c.instructor_id = u.id
+                 ORDER BY d.name, c.code, c.id'
+            );
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll()]);
+            break;
         case 'departments':
-            $stmt = $db->query('SELECT d.*, u.full_name as head_name, (SELECT COUNT(*) FROM users WHERE department_id=d.id AND role="instructor") as faculty_count FROM departments d LEFT JOIN users u ON d.head_instructor_id=u.id ORDER BY d.id');
+            /** head_name: only departments.head_instructor_id (official); no inferred “first instructor” */
+            $stmt = $db->query(
+                'SELECT d.*, hu.full_name AS head_name,
+                        (SELECT COUNT(*) FROM users WHERE department_id = d.id AND role = \'instructor\') AS faculty_count
+                 FROM departments d
+                 LEFT JOIN users hu ON hu.id = d.head_instructor_id
+                 ORDER BY d.id'
+            );
             echo json_encode(['success'=>true,'data'=>$stmt->fetchAll()]); break;
         case 'programs':
             $stmt = $db->query('SELECT DISTINCT program, year_level, department_id FROM courses WHERE program IS NOT NULL ORDER BY program');
@@ -48,6 +71,44 @@ if ($method === 'GET' && $action === 'list') {
         default:
             http_response_code(400); echo json_encode(['success'=>false,'message'=>'Unknown entity']); break;
     }
+} elseif ($method === 'GET' && $action === 'students_for_class_enrollment') {
+    $courseId = (int) ($_GET['course_id'] ?? 0);
+    if ($courseId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'course_id is required.']);
+        exit;
+    }
+    $cstmt = $db->prepare('SELECT id, department_id, status FROM courses WHERE id = ?');
+    $cstmt->execute([$courseId]);
+    $course = $cstmt->fetch(PDO::FETCH_ASSOC);
+    if (!$course || ($course['status'] ?? '') !== 'active') {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Class not found or inactive.']);
+        exit;
+    }
+    $deptId = (int) $course['department_id'];
+    $stmt = $db->prepare(
+        'SELECT u.id, u.username, u.full_name,
+                CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END AS enrolled
+         FROM users u
+         LEFT JOIN enrollments e ON e.student_id = u.id AND e.course_id = ?
+         WHERE u.role = \'student\' AND u.status = \'active\' AND u.department_id = ?
+         ORDER BY u.full_name ASC, u.username ASC'
+    );
+    $stmt->execute([$courseId, $deptId]);
+    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($students as &$sRow) {
+        $sRow['id'] = (int) ($sRow['id'] ?? 0);
+        $sRow['enrolled'] = (int) ($sRow['enrolled'] ?? 0) === 1;
+    }
+    unset($sRow);
+    echo json_encode([
+        'success'         => true,
+        'course_id'       => $courseId,
+        'department_id'   => $deptId,
+        'students'        => $students,
+    ]);
+    exit;
 } elseif ($method === 'POST' && $action === 'create') {
     switch ($entity) {
         case 'user':
@@ -314,6 +375,38 @@ if ($method === 'GET' && $action === 'list') {
         exit;
     }
 
+    $bulkCourseIds = [];
+    if (!empty($input['course_ids']) && is_array($input['course_ids'])) {
+        $bulkCourseIds = array_values(array_unique(array_filter(array_map('intval', $input['course_ids']), function ($id) {
+            return $id > 0;
+        })));
+    }
+    $classCourseId = (int) ($input['class_course_id'] ?? 0);
+    if ($classCourseId > 0) {
+        $bulkCourseIds[] = $classCourseId;
+    }
+    $bulkCourseIds = array_values(array_unique(array_filter($bulkCourseIds, function ($id) {
+        return $id > 0;
+    })));
+
+    if ($bulkCourseIds !== []) {
+        $chk = $db->prepare('SELECT id, department_id FROM courses WHERE id = ? AND status = "active"');
+        foreach ($bulkCourseIds as $cid) {
+            $chk->execute([$cid]);
+            $courseRow = $chk->fetch(PDO::FETCH_ASSOC);
+            if (!$courseRow) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid or inactive course ID: ' . $cid]);
+                exit;
+            }
+            if ((int) $courseRow['department_id'] !== $deptId) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Each enrollment course must belong to the bulk import department.']);
+                exit;
+            }
+        }
+    }
+
     $usernames = array_column($parsed, 'username');
     $placeholders = implode(',', array_fill(0, count($usernames), '?'));
     $chkDup = $db->prepare('SELECT username FROM users WHERE username IN (' . $placeholders . ')');
@@ -337,6 +430,7 @@ if ($method === 'GET' && $action === 'list') {
 
     $db->beginTransaction();
     try {
+        $newStudentIds = [];
         foreach ($parsed as $row) {
             $ins->execute([
                 $row['username'],
@@ -347,7 +441,28 @@ if ($method === 'GET' && $action === 'list') {
                 $deptId,
                 'active',
             ]);
+            $newStudentIds[] = (int) $db->lastInsertId();
         }
+
+        if ($bulkCourseIds !== [] && $newStudentIds !== []) {
+            $insEn = $db->prepare('INSERT INTO enrollments (student_id, course_id) VALUES (?, ?)');
+            foreach ($newStudentIds as $sid) {
+                foreach ($bulkCourseIds as $cid) {
+                    if ($cid <= 0) {
+                        continue;
+                    }
+                    try {
+                        $insEn->execute([$sid, $cid]);
+                    } catch (PDOException $e) {
+                        if (strpos($e->getMessage(), 'Duplicate') !== false) {
+                            continue;
+                        }
+                        throw $e;
+                    }
+                }
+            }
+        }
+
         $db->commit();
     } catch (Throwable $e) {
         if ($db->inTransaction()) {
@@ -370,6 +485,89 @@ if ($method === 'GET' && $action === 'list') {
         "Imported {$n} students (department_id {$deptId})"
     );
     echo json_encode(['success' => true, 'message' => 'Imported ' . $n . ' student(s).', 'count' => $n]);
+} elseif ($method === 'POST' && $action === 'enroll_students_in_course') {
+    $courseId = (int) ($input['course_id'] ?? 0);
+    $rawIds = $input['student_ids'] ?? [];
+    if ($courseId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'course_id is required.']);
+        exit;
+    }
+    if (!is_array($rawIds)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'student_ids must be an array.']);
+        exit;
+    }
+    $studentIds = array_values(array_unique(array_filter(array_map('intval', $rawIds), function ($id) {
+        return $id > 0;
+    })));
+    if ($studentIds === []) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Select at least one student.']);
+        exit;
+    }
+    if (count($studentIds) > 500) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Too many students in one request (max 500).']);
+        exit;
+    }
+
+    $cstmt = $db->prepare('SELECT id, department_id, status FROM courses WHERE id = ?');
+    $cstmt->execute([$courseId]);
+    $courseRow = $cstmt->fetch(PDO::FETCH_ASSOC);
+    if (!$courseRow || ($courseRow['status'] ?? '') !== 'active') {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Class not found or inactive.']);
+        exit;
+    }
+    $courseDeptId = (int) $courseRow['department_id'];
+
+    $uStmt = $db->prepare('SELECT id, role, status, department_id FROM users WHERE id = ?');
+    foreach ($studentIds as $sid) {
+        $uStmt->execute([$sid]);
+        $u = $uStmt->fetch(PDO::FETCH_ASSOC);
+        if (!$u || ($u['role'] ?? '') !== 'student' || ($u['status'] ?? '') !== 'active' || (int) ($u['department_id'] ?? 0) !== $courseDeptId) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Each selected user must be an active student whose home department matches this class (user #' . $sid . ').',
+            ]);
+            exit;
+        }
+    }
+
+    $insEn = $db->prepare('INSERT INTO enrollments (student_id, course_id) VALUES (?, ?)');
+    $added = 0;
+    $skipped = 0;
+    foreach ($studentIds as $sid) {
+        try {
+            $insEn->execute([$sid, $courseId]);
+            ++$added;
+        } catch (PDOException $e) {
+            if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate') !== false) {
+                ++$skipped;
+
+                continue;
+            }
+            throw $e;
+        }
+    }
+
+    AuthService::logAudit(
+        AuthService::getUserId(),
+        'students_enrolled_in_course',
+        'course',
+        $courseId,
+        "Enrolled {$added} student(s); skipped duplicates: {$skipped}"
+    );
+    echo json_encode([
+        'success'       => true,
+        'message'       => $added === 0
+            ? 'No new enrolments (selected students were already enrolled).'
+            : ('Enrolled ' . $added . ' student(s)' . ($skipped > 0 ? ('; ' . $skipped . ' already on roster') : '') . '.'),
+        'enrolled_count' => $added,
+        'skipped_count'  => $skipped,
+    ]);
 } else {
     http_response_code(400); echo json_encode(['success'=>false,'message'=>'Invalid request']);
 }

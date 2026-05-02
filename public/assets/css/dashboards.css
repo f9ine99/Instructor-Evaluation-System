@@ -408,6 +408,23 @@ button.nav-item {
   color: var(--error);
 }
 
+.dean-toast--warning {
+  background: color-mix(in srgb, var(--warning) 14%, var(--bg-surface));
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 35%, var(--card-border));
+}
+
+.dean-enrolled-zero {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 28%, var(--card-border));
+}
+
 .score-bar-fill--real {
   transition: width 0.35s ease;
 }
@@ -1021,6 +1038,256 @@ button.nav-item {
   border-radius: 50%;
   background: var(--input-bg);
   border: 1px solid var(--card-border);
+}
+
+.dean-enrollment-preview {
+  margin-top: 4px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--input-bg) 86%, var(--card-bg));
+  color: var(--text-primary);
+}
+
+.dean-enrollment-preview--loading {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.dean-enrollment-preview--warn {
+  border-color: color-mix(in srgb, #f59e0b 42%, var(--card-border));
+  background: color-mix(in srgb, #f59e0b 10%, var(--card-bg));
+}
+
+.dean-enrollment-preview--error {
+  border-color: color-mix(in srgb, #ef4444 35%, var(--card-border));
+  background: color-mix(in srgb, #ef4444 08%, var(--card-bg));
+  color: #fecaca;
+}
+
+.light-mode .dean-enrollment-preview--error {
+  color: #991b1b;
+}
+
+.dean-enrollment-preview__title {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.dean-enrollment-preview__body {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.dean-enrollment-preview__names {
+  color: var(--text-primary);
+}
+
+.dean-enrollment-preview__more {
+  opacity: 0.85;
+}
+
+.dean-roster-preview-shell {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed color-mix(in srgb, var(--card-border) 82%, transparent);
+}
+
+.dean-roster-preview-shell__title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.dean-roster-preview-shell__sub {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.dean-roster-preview-shell .dean-enrollment-preview {
+  margin-top: 0;
+}
+
+.dean-enrollment-preview--idle {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--card-border) 70%, transparent);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.dean-roster-preview-idle {
+  margin: 0;
+  font-size: 13px;
+}
+
+.dean-enrollment-preview--roster {
+  padding: 0;
+  overflow: hidden;
+}
+
+.dean-roster-preview-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--input-bg) 75%, transparent);
+}
+
+.dean-roster-preview-count {
+  margin: 0;
+  font-size: 13px;
+}
+
+.dean-roster-preview-count--warn {
+  color: var(--warning);
+}
+
+.dean-roster-preview-empty-msg {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.dean-roster-preview-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: min(300px, 42vh);
+  overflow: auto;
+}
+
+.dean-roster-preview-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 65%, transparent);
+  font-size: 13px;
+}
+
+.dean-roster-preview-item:last-child {
+  border-bottom: none;
+}
+
+.dean-roster-preview-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.dean-roster-preview-user {
+  flex-shrink: 0;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.dean-roster-preview__foot {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--input-bg) 55%, transparent);
+}
+
+.dean-datetime-help {
+  margin: 0 0 14px;
+  padding: 12px 14px 12px 28px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--input-bg) 88%, var(--card-bg));
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+}
+
+.dean-datetime-help li {
+  margin: 4px 0;
+}
+
+.dean-response-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 14px;
+}
+
+.dean-response-presets__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.dean-response-preset-btn {
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+}
+
+.dean-window-summary {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--input-bg) 85%, var(--card-bg));
+  color: var(--text-primary);
+}
+
+.dean-window-summary__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.dean-window-summary__text {
+  display: block;
+}
+
+.dean-window-summary--ok {
+  border-color: color-mix(in srgb, #10b981 35%, var(--card-border));
+  background: color-mix(in srgb, #10b981 10%, var(--card-bg));
+}
+
+.dean-window-summary--warn {
+  border-color: color-mix(in srgb, #f59e0b 45%, var(--card-border));
+  background: color-mix(in srgb, #f59e0b 12%, var(--card-bg));
+}
+
+.dean-window-summary--bad {
+  border-color: color-mix(in srgb, #ef4444 40%, var(--card-border));
+  background: color-mix(in srgb, #ef4444 10%, var(--card-bg));
+}
+
+.dean-window-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+}
+
+.light-mode .dean-window-error {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.08);
 }
 
 @media (max-width: 540px) {
@@ -2044,6 +2311,155 @@ html.light-mode .admin-dashboard .admin-role-filter.active {
   color: var(--text-primary);
 }
 
+.admin-dashboard .admin-manage-placeholder {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.admin-dashboard .admin-course-row--eval-gap td {
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+}
+
+.admin-dashboard .admin-course-row--eval-gap td:first-child {
+  box-shadow: inset 3px 0 0 var(--warning);
+}
+
+.admin-dashboard .admin-course-enrolled-cell {
+  vertical-align: top;
+  min-width: 5.5rem;
+}
+
+.admin-dashboard .admin-course-enrolled-num {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-dashboard .admin-course-eval-gap-chip {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--warning) 92%, var(--text-primary));
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 35%, var(--card-border));
+  white-space: normal;
+  max-width: 11rem;
+}
+
+/* Evaluation vs roster: visible “gap” when sheets exist but course has zero enrollments */
+.admin-gap-banner-root:not([hidden]),
+.dean-gap-banner-root:not([hidden]) {
+  margin-bottom: clamp(16px, 2vw, 22px);
+}
+
+.admin-dashboard .admin-enrollment-gaps {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--warning) 42%, var(--card-border));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--warning) 10%, var(--card-bg)) 0%,
+    color-mix(in srgb, var(--card-bg) 96%, transparent) 100%
+  );
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1);
+}
+
+.admin-dashboard .admin-enrollment-gaps__icon {
+  flex-shrink: 0;
+  color: var(--warning);
+  margin-top: 2px;
+}
+
+.admin-dashboard .admin-enrollment-gaps__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-enrollment-gaps__lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.admin-dashboard .admin-enrollment-gaps__list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-enrollment-gaps__sheet {
+  font-weight: 700;
+}
+
+.admin-dashboard .admin-enrollment-gaps__status {
+  text-transform: capitalize;
+}
+
+.admin-dashboard .admin-enrollment-gaps__more {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.dean-enrollment-gaps {
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--warning) 38%, var(--card-border));
+  background: color-mix(in srgb, var(--warning) 9%, var(--bg-secondary));
+  margin-bottom: 8px;
+}
+
+.dean-enrollment-gaps__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.dean-enrollment-gaps__lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.dean-enrollment-gaps__list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.dean-enrollment-gaps__sheet {
+  font-weight: 700;
+}
+
+.dean-enrollment-gaps__status {
+  text-transform: capitalize;
+}
+
+.dean-enrollment-gaps__more {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .admin-dashboard .admin-chip {
   display: inline-block;
   padding: 3px 10px;
@@ -2750,4 +3166,274 @@ html.light-mode .admin-dashboard .admin-overview-strip {
   box-shadow:
     0 10px 32px rgba(15, 23, 42, 0.05),
     0 1px 0 rgba(255, 255, 255, 0.75) inset;
+}
+
+/* Admin class roster hub + bulk class lock */
+.admin-dashboard .table-action-btn--roster {
+  margin-right: 6px;
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--card-border));
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  color: var(--accent-primary);
+}
+
+.admin-dashboard .table-action-btn--roster:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-primary) 22%, transparent);
+}
+
+.admin-dashboard .admin-bulk-class-lock {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, var(--card-border));
+}
+
+.admin-dashboard .admin-class-hub-overlay .admin-modal-surface {
+  max-width: 560px;
+}
+
+.admin-dashboard .admin-class-hub-actions {
+  justify-content: flex-end;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+  row-gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+}
+
+/* Class roster footer: primary/outline actions (standalone — .btn-submit is only wired for dean-modal-footer) */
+.admin-dashboard .admin-class-hub-action-btn {
+  position: relative;
+  min-height: 46px;
+  padding: 12px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease,
+    opacity 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.admin-dashboard .admin-class-hub-action-btn:focus-visible {
+  outline: none;
+}
+
+.admin-dashboard .admin-class-hub-action-btn--enroll {
+  min-width: 158px;
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  box-shadow:
+    0 4px 18px rgba(var(--accent-primary-rgb), 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.14) inset;
+}
+
+.admin-dashboard .admin-class-hub-action-btn--enroll:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow:
+    0 6px 24px rgba(var(--accent-primary-rgb), 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.18) inset;
+  transform: translateY(-1px);
+}
+
+.admin-dashboard .admin-class-hub-action-btn--enroll:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.admin-dashboard .admin-class-hub-action-btn--enroll:focus-visible {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent-primary) 30%, transparent),
+    0 4px 18px rgba(var(--accent-primary-rgb), 0.42);
+}
+
+.admin-dashboard .admin-class-hub-action-btn--enroll:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.12);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.admin-dashboard .admin-class-hub-action-btn--bulk {
+  min-width: 198px;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 48%, var(--card-border));
+  color: var(--accent-primary);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--accent-primary) 14%, transparent) 0%,
+    color-mix(in srgb, var(--accent-secondary) 8%, transparent) 100%
+  );
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.admin-dashboard .admin-class-hub-action-btn--bulk:hover:not(:disabled) {
+  filter: brightness(1.05);
+  border-color: color-mix(in srgb, var(--accent-primary) 65%, var(--card-border));
+  box-shadow:
+    0 4px 18px rgba(var(--accent-primary-rgb), 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  transform: translateY(-1px);
+}
+
+.admin-dashboard .admin-class-hub-action-btn--bulk:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.admin-dashboard .admin-class-hub-action-btn--bulk:focus-visible {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent-primary) 26%, transparent),
+    0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+.admin-dashboard .admin-class-hub-action-btn--bulk:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.06);
+}
+
+html.light-mode .admin-dashboard .admin-class-hub-action-btn--bulk {
+  box-shadow:
+    0 2px 12px rgba(15, 23, 42, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset;
+}
+
+.admin-dashboard .admin-class-hub-enroll {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
+}
+
+.admin-dashboard .admin-class-hub-enroll-title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-class-hub-enroll-lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.admin-dashboard .admin-class-hub-picker {
+  min-height: 1.25em;
+}
+
+.admin-dashboard .admin-class-hub-pick-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.admin-dashboard .admin-class-hub-pick-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: min(40vh, 280px);
+  overflow: auto;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
+}
+
+.admin-dashboard .admin-class-hub-pick-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 55%, transparent);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-class-hub-pick-list li:last-child .admin-class-hub-pick-item {
+  border-bottom: none;
+}
+
+.admin-dashboard .admin-class-hub-pick-item input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.admin-dashboard .admin-class-hub-meta__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-class-hub-meta__sub {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.admin-dashboard .admin-class-hub-loading,
+.admin-dashboard .admin-class-hub-empty,
+.admin-dashboard .admin-class-hub-error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.admin-dashboard .admin-class-hub-error {
+  color: var(--error, #f87171);
+}
+
+.admin-dashboard .admin-class-hub-count {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.admin-dashboard .admin-class-hub-count strong {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.admin-dashboard .admin-class-hub-roster-list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  max-height: min(52vh, 360px);
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-class-hub-roster__id {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.admin-dashboard .admin-class-hub-more {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
 }

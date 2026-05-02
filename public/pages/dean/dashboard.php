@@ -64,6 +64,7 @@ $ab = '../../assets';
         <p class="dean-scope-note" id="deanScopeNote">Overview metrics and lists below are scoped to <strong>your department</strong> only.</p>
 
         <section id="overview" class="section-content active" aria-labelledby="pageTitle">
+            <div id="deanGapBanner" class="dean-gap-banner-root" hidden aria-live="polite"></div>
             <div class="stats-grid" id="statsGrid">
                 <p style="color:var(--text-secondary);">Loading…</p>
             </div>
@@ -83,7 +84,7 @@ $ab = '../../assets';
             <div class="section-toolbar">
                 <div>
                     <h2 class="section-heading">Evaluation sheets</h2>
-                    <p class="section-subtitle">Create and advance the lifecycle for evaluations in your department.</p>
+                    <p class="section-subtitle">Create and advance the lifecycle for evaluations in your department. A sheet applies to everyone <strong>already enrolled</strong> in the linked class offering—Administrators add those enrollments under <strong>Manage → Classes → Class roster</strong>.</p>
                 </div>
                 <button type="button" class="dean-create-cta" id="openCreateModalBtn">
                     <span class="dean-create-cta__icon" aria-hidden="true">
@@ -98,6 +99,7 @@ $ab = '../../assets';
                         <tr>
                             <th>Title</th>
                             <th>Course</th>
+                            <th>Enrolled</th>
                             <th>Instructor</th>
                             <th>Status</th>
                             <th>Submissions</th>
@@ -105,7 +107,7 @@ $ab = '../../assets';
                         </tr>
                     </thead>
                     <tbody id="evalTableBody">
-                        <tr><td colspan="6" style="text-align:center;">Loading…</td></tr>
+                        <tr><td colspan="7" style="text-align:center;">Loading…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -144,7 +146,7 @@ $ab = '../../assets';
             </div>
             <div class="dean-modal-header__text">
                 <h2 id="createModalTitle" class="dean-modal-title">New evaluation sheet</h2>
-                <p id="createModalDesc" class="dean-modal-subtitle">Students will complete this form for the course and instructor you link below.</p>
+                <p id="createModalDesc" class="dean-modal-subtitle">Links to one course; only students enrolled in that course will see it. With no response window, it opens immediately; with a future opening time it stays scheduled until you choose Open in Manage Evaluations.</p>
             </div>
             <button type="button" class="dean-modal-close" id="createModalCloseBtn" aria-label="Close dialog">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -216,7 +218,7 @@ $ab = '../../assets';
                     </span>
                     <div class="dean-form-section__head-text">
                         <h3 class="dean-form-section__title">Course &amp; instructor</h3>
-                        <p class="dean-form-section__lead">Choose a course and instructor from your department.</p>
+                        <p class="dean-form-section__lead">You do <strong>not</strong> enroll students here. Pick the class offering—the roster below is a live preview of who Admin has enrolled; they can update it in <strong>Manage → Classes → Class roster</strong>.</p>
                     </div>
                 </div>
                 <div class="form-row-2 dean-form-card__grid">
@@ -225,15 +227,20 @@ $ab = '../../assets';
                         <select class="form-select dean-modal-select" id="createCourseId" name="course_id" required aria-describedby="createCourseHint">
                             <option value="">Loading courses…</option>
                         </select>
-                        <p class="dean-field-hint" id="createCourseHint">Code and title from your department’s active course catalog.</p>
+                        <p class="dean-field-hint" id="createCourseHint">When the sheet is open, only students on this course’s roster (below) can submit.</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="createInstructorId">Instructor <span class="dean-req" aria-hidden="true">*</span></label>
                         <select class="form-select dean-modal-select" id="createInstructorId" name="instructor_id" required aria-describedby="createInstructorHint">
                             <option value="">Loading instructors…</option>
                         </select>
-                        <p class="dean-field-hint" id="createInstructorHint">Select by name — active instructors in your department only.</p>
+                        <p class="dean-field-hint" id="createInstructorHint">Must match the instructor assigned to this course in the catalog.</p>
                     </div>
+                </div>
+                <div class="dean-roster-preview-shell">
+                    <h4 id="deanCreateRosterHeading" class="dean-roster-preview-shell__title">Class roster preview</h4>
+                    <p class="dean-roster-preview-shell__sub">Names update when you change the course. Read-only—you cannot edit the roster here.</p>
+                    <div id="deanEnrollmentPreview" class="dean-enrollment-preview" role="region" aria-labelledby="deanCreateRosterHeading" aria-live="polite" hidden></div>
                 </div>
             </div>
 
@@ -243,14 +250,28 @@ $ab = '../../assets';
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </span>
                     <div class="dean-form-section__head-text">
-                        <h3 class="dean-form-section__title">Response window <span class="dean-optional">optional</span></h3>
-                        <p class="dean-form-section__lead">Leave blank to set later, or define when students may submit.</p>
+                        <h3 class="dean-form-section__title">When students can submit <span class="dean-optional">optional</span></h3>
+                        <p class="dean-form-section__lead">Set <strong>both</strong> opening and closing, or leave <strong>both</strong> empty and schedule later. Closing must be <strong>after</strong> opening (same calendar day is OK).</p>
                     </div>
                 </div>
+                <ul class="dean-datetime-help" aria-label="Tips for response window">
+                    <li>Times use <strong>your computer’s</strong> local date and time (not UTC).</li>
+                    <li><strong>Opens</strong> = first minute students may start; <strong>Closes</strong> = deadline (last minute to submit).</li>
+                    <li>Pick the <strong>date</strong> first, then the <strong>time</strong> — easy to set the wrong day if you only change the clock.</li>
+                </ul>
+                <div class="dean-response-presets" role="group" aria-label="Quick fill response window">
+                    <span class="dean-response-presets__label">Quick fill</span>
+                    <button type="button" class="btn btn--secondary dean-response-preset-btn" data-dean-preset="week">Next 7 days</button>
+                    <button type="button" class="btn btn--secondary dean-response-preset-btn" data-dean-preset="twoweeks">Next 14 days</button>
+                    <button type="button" class="btn btn--secondary dean-response-preset-btn" data-dean-preset="clear">Clear times</button>
+                </div>
+                <div id="deanWindowSummary" class="dean-window-summary" aria-live="polite"></div>
+                <div id="deanWindowError" class="dean-window-error" role="alert" hidden></div>
                 <div class="dean-datetime-row">
                     <div class="form-group dean-datetime-field">
-                        <label class="form-label" for="createStart">Opens</label>
-                        <input type="datetime-local" class="form-input dean-modal-input dean-input-datetime" id="createStart" name="start_date">
+                        <label class="form-label" for="createStart">Opens <span class="dean-optional">first allowed</span></label>
+                        <input type="datetime-local" class="form-input dean-modal-input dean-input-datetime" id="createStart" name="start_date" aria-describedby="createStartHint">
+                        <p class="dean-field-hint" id="createStartHint">When the form becomes available to students.</p>
                     </div>
                     <div class="dean-datetime-connector" aria-hidden="true">
                         <span class="dean-datetime-connector__arrow">
@@ -258,8 +279,9 @@ $ab = '../../assets';
                         </span>
                     </div>
                     <div class="form-group dean-datetime-field">
-                        <label class="form-label" for="createEnd">Closes</label>
-                        <input type="datetime-local" class="form-input dean-modal-input dean-input-datetime" id="createEnd" name="end_date">
+                        <label class="form-label" for="createEnd">Closes <span class="dean-optional">deadline</span></label>
+                        <input type="datetime-local" class="form-input dean-modal-input dean-input-datetime" id="createEnd" name="end_date" aria-describedby="createEndHint">
+                        <p class="dean-field-hint" id="createEndHint">Must be later than “Opens” (check both date and time).</p>
                     </div>
                 </div>
             </div>
@@ -296,9 +318,12 @@ $ab = '../../assets';
     function showToast(message, type) {
         const el = document.getElementById('deanToast');
         el.textContent = message;
-        el.className = 'dean-toast is-visible dean-toast--' + (type === 'success' ? 'success' : 'error');
+        const variant =
+            type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'error';
+        el.className = 'dean-toast is-visible dean-toast--' + variant;
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { el.classList.remove('is-visible'); }, 4200);
+        const ms = type === 'warning' ? 6800 : 4200;
+        toastTimer = setTimeout(function () { el.classList.remove('is-visible'); }, ms);
     }
 
     function loadTheme() {
@@ -357,9 +382,121 @@ $ab = '../../assets';
             if (selectStillLoading(document.getElementById('createInstructorId'))) {
                 loadDepartmentInstructorPicker();
             }
+            clearDeanEnrollmentPreview();
             document.getElementById('createTitle').focus();
+            updateDeanResponseWindowUI();
+            setTimeout(refreshDeanEnrollmentPreview, 600);
         }
     }
+
+    function pad2(n) { return n < 10 ? '0' + n : String(n); }
+    function toDatetimeLocalValue(d) {
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+            'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+    function parseDatetimeLocalVal(s) {
+        if (!s) return null;
+        var d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    var dateTimeFmt = new Intl.DateTimeFormat(undefined, {
+        weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+
+    function setDeanWindowError(msg) {
+        var el = document.getElementById('deanWindowError');
+        if (!el) return;
+        if (msg) {
+            el.textContent = msg;
+            el.hidden = false;
+        } else {
+            el.textContent = '';
+            el.hidden = true;
+        }
+    }
+
+    function updateDeanResponseWindowUI() {
+        var sum = document.getElementById('deanWindowSummary');
+        var startEl = document.getElementById('createStart');
+        var endEl = document.getElementById('createEnd');
+        if (!sum || !startEl || !endEl) return;
+
+        var sv = startEl.value;
+        var ev = endEl.value;
+
+        if (sv) {
+            endEl.min = sv;
+        } else {
+            endEl.removeAttribute('min');
+        }
+
+        if (!sv && !ev) {
+            sum.className = 'dean-window-summary';
+            sum.innerHTML = '<span class="dean-window-summary__text">No window set — leave as draft or set dates when you are ready. You can still use quick fill below.</span>';
+            setDeanWindowError('');
+            return;
+        }
+        if ((sv && !ev) || (!sv && ev)) {
+            sum.className = 'dean-window-summary dean-window-summary--warn';
+            sum.innerHTML = '<span class="dean-window-summary__text"><strong>Incomplete:</strong> set both “Opens” and “Closes”, or use <em>Clear times</em>.</span>';
+            setDeanWindowError('Set both opening and closing times, or clear both.');
+            return;
+        }
+        var ds = parseDatetimeLocalVal(sv);
+        var de = parseDatetimeLocalVal(ev);
+        if (!ds || !de) {
+            sum.textContent = '';
+            return;
+        }
+        if (de <= ds) {
+            sum.className = 'dean-window-summary dean-window-summary--bad';
+            sum.innerHTML = '<span class="dean-window-summary__text"><strong>Check order:</strong> closing must be <em>after</em> opening — verify the calendar day <strong>and</strong> the clock (same-day windows are fine).</span>';
+            setDeanWindowError('Closing must be after opening.');
+            return;
+        }
+        setDeanWindowError('');
+        sum.className = 'dean-window-summary dean-window-summary--ok';
+        sum.innerHTML = '<span class="dean-window-summary__label">Preview (this device’s local time)</span><br>' +
+            '<strong>From</strong> ' + dateTimeFmt.format(ds) + ' <strong>to</strong> ' + dateTimeFmt.format(de);
+    }
+
+    document.querySelectorAll('[data-dean-preset]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var mode = btn.getAttribute('data-dean-preset');
+            var startEl = document.getElementById('createStart');
+            var endEl = document.getElementById('createEnd');
+            if (!startEl || !endEl) return;
+            if (mode === 'clear') {
+                startEl.value = '';
+                endEl.value = '';
+                endEl.removeAttribute('min');
+                updateDeanResponseWindowUI();
+                return;
+            }
+            var start = new Date();
+            start.setDate(start.getDate() + 1);
+            start.setHours(8, 0, 0, 0);
+            var end = new Date(start.getTime());
+            if (mode === 'week') {
+                end.setDate(end.getDate() + 7);
+                end.setHours(20, 0, 0, 0);
+            } else {
+                end.setDate(end.getDate() + 14);
+                end.setHours(23, 59, 0, 0);
+            }
+            startEl.value = toDatetimeLocalValue(start);
+            endEl.value = toDatetimeLocalValue(end);
+            updateDeanResponseWindowUI();
+        });
+    });
+
+    ['createStart', 'createEnd'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', updateDeanResponseWindowUI);
+        el.addEventListener('change', updateDeanResponseWindowUI);
+    });
+
     document.getElementById('openCreateModalBtn').addEventListener('click', function () { setModalOpen(true); });
     document.getElementById('cancelCreateBtn').addEventListener('click', function () { setModalOpen(false); });
     document.getElementById('createModalCloseBtn').addEventListener('click', function () { setModalOpen(false); });
@@ -372,13 +509,66 @@ $ab = '../../assets';
         }
     });
 
+    function renderDeanEnrollmentGaps(gaps) {
+        var max = 10;
+        var slice = gaps.slice(0, max);
+        var lines = slice
+            .map(function (g) {
+                return (
+                    '<li><span class="dean-enrollment-gaps__sheet">' +
+                    escapeHtml(g.sheet_title || '—') +
+                    '</span> · ' +
+                    escapeHtml(g.course_code || '') +
+                    ' · <span class="dean-enrollment-gaps__status">' +
+                    escapeHtml(g.sheet_status || '') +
+                    '</span></li>'
+                );
+            })
+            .join('');
+        var more =
+            gaps.length > max
+                ? '<p class="dean-enrollment-gaps__more">And ' + (gaps.length - max) + ' more in your department — see <strong>Manage Evaluations</strong> (Enrolled column).</p>'
+                : '';
+        return (
+            '<div class="dean-enrollment-gaps" role="region" aria-label="Roster gaps">' +
+            '<h3 class="dean-enrollment-gaps__title">Roster not synced</h3>' +
+            '<p class="dean-enrollment-gaps__lead">Some evaluations are active or planned, but the linked class has <strong>no students enrolled</strong>. Ask an administrator to add rosters: <strong>Manage → Classes → Class roster</strong>.</p>' +
+            '<ul class="dean-enrollment-gaps__list">' +
+            lines +
+            '</ul>' +
+            more +
+            '</div>'
+        );
+    }
+
     async function loadDashboard() {
         const statsEl = document.getElementById('statsGrid');
+        const gapEl = document.getElementById('deanGapBanner');
         function errStats(msg) {
+            if (gapEl) {
+                gapEl.hidden = true;
+                gapEl.innerHTML = '';
+            }
             statsEl.innerHTML = '<p style="color:var(--error);padding:12px;">' + escapeHtml(msg) + '</p>';
         }
         try {
-            const sRes = await fetch('/api/analytics.php?action=system_stats', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+            const [sRes, gRes] = await Promise.all([
+                fetch('/api/analytics.php?action=system_stats', { credentials: 'same-origin', headers: { Accept: 'application/json' } }),
+                fetch('/api/analytics.php?action=enrollment_gaps', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            ]);
+            let gData = { success: false, gaps: [] };
+            try {
+                gData = await gRes.json();
+            } catch (x) {}
+            if (gapEl) {
+                if (gRes.ok && gData.success && gData.gaps && gData.gaps.length) {
+                    gapEl.hidden = false;
+                    gapEl.innerHTML = renderDeanEnrollmentGaps(gData.gaps);
+                } else {
+                    gapEl.hidden = true;
+                    gapEl.innerHTML = '';
+                }
+            }
             let sData;
             try { sData = await sRes.json(); } catch (x) { errStats('Invalid response from server.'); return; }
             if (sRes.status === 401) { errStats('Session expired. Sign in again.'); return; }
@@ -390,6 +580,10 @@ $ab = '../../assets';
                 '<div class="stat-card"><div class="stat-info"><h3>Pending reviews</h3><div class="value">' + s.pending_reviews + '</div></div></div>' +
                 '<div class="stat-card"><div class="stat-info"><h3>Average score</h3><div class="value">' + s.system_avg_score + '</div></div></div>';
         } catch (e) {
+            if (gapEl) {
+                gapEl.hidden = true;
+                gapEl.innerHTML = '';
+            }
             errStats('Could not load statistics.');
         }
 
@@ -505,6 +699,101 @@ $ab = '../../assets';
         }
     }
 
+    var enrollmentPreviewTimer = null;
+
+    function clearDeanEnrollmentPreview() {
+        var el = document.getElementById('deanEnrollmentPreview');
+        if (!el) return;
+        el.hidden = false;
+        el.className = 'dean-enrollment-preview dean-enrollment-preview--idle';
+        el.innerHTML = '<p class="dean-roster-preview-idle">Select a course above to load its roster preview.</p>';
+    }
+
+    async function refreshDeanEnrollmentPreview() {
+        var el = document.getElementById('deanEnrollmentPreview');
+        var cidEl = document.getElementById('createCourseId');
+        if (!el || !cidEl) return;
+        var cid = parseInt(cidEl.value, 10);
+        if (!cid) {
+            clearDeanEnrollmentPreview();
+            return;
+        }
+        el.hidden = false;
+        el.className = 'dean-enrollment-preview dean-enrollment-preview--loading';
+        el.textContent = 'Loading roster…';
+        try {
+            var r = await fetch(
+                '/api/evaluations.php?action=course_enrollment_preview&course_id=' + encodeURIComponent(cid) + '&limit=120',
+                { credentials: 'same-origin', headers: { Accept: 'application/json' } }
+            );
+            var d = await r.json().catch(function () { return {}; });
+            if (!r.ok || !d.success) {
+                el.className = 'dean-enrollment-preview dean-enrollment-preview--error';
+                el.innerHTML = '<strong>Could not load roster.</strong> ' + escapeHtml(d.message || ('HTTP ' + r.status));
+                return;
+            }
+            var n = parseInt(d.count, 10) || 0;
+            var studs = Array.isArray(d.students) ? d.students : [];
+            el.className = 'dean-enrollment-preview dean-enrollment-preview--roster';
+            if (n === 0) {
+                el.classList.add('dean-enrollment-preview--warn');
+                el.innerHTML =
+                    '<header class="dean-roster-preview-header"><p class="dean-roster-preview-count dean-roster-preview-count--warn"><strong>0 students</strong> on this roster</p></header>' +
+                    '<p class="dean-roster-preview-empty-msg">Nobody can submit this evaluation until an administrator enrolls students in this class (<strong>Admin → Manage → Classes → Class roster</strong>).</p>';
+                return;
+            }
+            var rosterItems = studs
+                .map(function (u) {
+                    var label = escapeHtml((u.full_name || u.username || '').trim() || '—');
+                    var un = escapeHtml(u.username || '');
+                    return (
+                        '<li class="dean-roster-preview-item">' +
+                        '<span class="dean-roster-preview-name">' +
+                        label +
+                        '</span>' +
+                        '<span class="dean-roster-preview-user">' +
+                        un +
+                        '</span></li>'
+                    );
+                })
+                .join('');
+            var foot = '';
+            if (n > studs.length) {
+                foot =
+                    '<p class="dean-roster-preview__foot">Showing <strong>' +
+                    studs.length +
+                    '</strong> of <strong>' +
+                    n +
+                    '</strong> enrolled active students.</p>';
+            } else {
+                foot =
+                    '<p class="dean-roster-preview__foot">All <strong>' +
+                    n +
+                    '</strong> enrolled active students are listed.</p>';
+            }
+            el.innerHTML =
+                '<header class="dean-roster-preview-header">' +
+                '<p class="dean-roster-preview-count"><strong>' +
+                n +
+                '</strong> student' +
+                (n !== 1 ? 's' : '') +
+                ' on roster</p>' +
+                '</header>' +
+                '<ul class="dean-roster-preview-list">' +
+                rosterItems +
+                '</ul>' +
+                foot;
+        } catch (e) {
+            el.className = 'dean-enrollment-preview dean-enrollment-preview--error';
+            el.textContent = 'Could not load roster preview.';
+        }
+    }
+
+    document.getElementById('createCourseId').addEventListener('change', function () {
+        if (enrollmentPreviewTimer) clearTimeout(enrollmentPreviewTimer);
+        enrollmentPreviewTimer = setTimeout(refreshDeanEnrollmentPreview, 200);
+    });
+
     async function loadEvalTable() {
         try {
             const r = await fetch('/api/evaluations.php?action=list', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
@@ -512,7 +801,7 @@ $ab = '../../assets';
             const sel = document.getElementById('resultSheetSelect');
             const body = document.getElementById('evalTableBody');
             if (!d.success) {
-                body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--error);">' + escapeHtml(d.message || 'Could not load') + '</td></tr>';
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);">' + escapeHtml(d.message || 'Could not load') + '</td></tr>';
                 return;
             }
             body.innerHTML = d.sheets.map(function (s) {
@@ -521,9 +810,39 @@ $ab = '../../assets';
                 const actionCell = nextAction[st]
                     ? '<button type="button" class="btn-submit dean-table-action" data-sheet-id="' + s.id + '" data-next-state="' + nextState[st] + '">' + escapeHtml(nextAction[st]) + '</button>'
                     : '—';
-                return '<tr><td style="font-weight:600;">' + escapeHtml(s.title) + '</td><td>' + escapeHtml(s.course_code) + '</td><td>' + escapeHtml(s.instructor_name) + '</td>' +
-                    '<td><span class="status-badge" style="background:' + bg + '22;color:' + bg + ';border:1px solid ' + bg + '44;">' + escapeHtml(st) + '</span></td>' +
-                    '<td>' + (s.submission_count != null ? s.submission_count : '0') + '</td><td>' + actionCell + '</td></tr>';
+                var enrN = parseInt(s.course_enrollment_count, 10);
+                if (isNaN(enrN)) enrN = 0;
+                var enrTd =
+                    enrN === 0
+                        ? '<span class="dean-enrolled-zero" title="No roster yet — admins enroll via Manage → Classes">' +
+                          enrN +
+                          '</span>'
+                        : String(enrN);
+                return (
+                    '<tr><td style="font-weight:600;">' +
+                    escapeHtml(s.title) +
+                    '</td><td>' +
+                    escapeHtml(s.course_code) +
+                    '</td><td>' +
+                    enrTd +
+                    '</td><td>' +
+                    escapeHtml(s.instructor_name) +
+                    '</td>' +
+                    '<td><span class="status-badge" style="background:' +
+                    bg +
+                    '22;color:' +
+                    bg +
+                    ';border:1px solid ' +
+                    bg +
+                    '44;">' +
+                    escapeHtml(st) +
+                    '</span></td>' +
+                    '<td>' +
+                    (s.submission_count != null ? s.submission_count : '0') +
+                    '</td><td>' +
+                    actionCell +
+                    '</td></tr>'
+                );
             }).join('');
             body.querySelectorAll('.dean-table-action').forEach(function (btn) {
                 btn.addEventListener('click', function () {
@@ -535,7 +854,7 @@ $ab = '../../assets';
                 sel.innerHTML += '<option value="' + s.id + '">' + escapeHtml(s.title) + ' (' + escapeHtml(s.status) + ')</option>';
             });
         } catch (e) {
-            document.getElementById('evalTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--error);">Could not load evaluations.</td></tr>';
+            document.getElementById('evalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);">Could not load evaluations.</td></tr>';
         }
     }
 
@@ -549,8 +868,16 @@ $ab = '../../assets';
                 body: JSON.stringify({ action: 'transition', sheet_id: id, new_state: state })
             });
             const d = await r.json();
-            if (d.success) showToast(d.message || 'Updated.', 'success');
-            else showToast(d.message || 'Update failed.', 'error');
+            if (d.success) {
+                showToast(d.message || 'Updated.', 'success');
+                if (d.enrollment_notice) {
+                    setTimeout(function () {
+                        showToast(d.enrollment_notice, 'warning');
+                    }, 450);
+                }
+            } else {
+                showToast(d.message || 'Update failed.', 'error');
+            }
             loadEvalTable();
             loadDashboard();
         } catch (e) {
@@ -560,6 +887,24 @@ $ab = '../../assets';
 
     document.getElementById('createForm').addEventListener('submit', async function (e) {
         e.preventDefault();
+        var sv = document.getElementById('createStart').value;
+        var ev = document.getElementById('createEnd').value;
+        if ((sv && !ev) || (!sv && ev)) {
+            showToast('Set both opening and closing times, or leave both blank.', 'error');
+            return;
+        }
+        if (sv && ev) {
+            var dS = new Date(sv);
+            var dE = new Date(ev);
+            if (isNaN(dS.getTime()) || isNaN(dE.getTime())) {
+                showToast('Check opening and closing date/time.', 'error');
+                return;
+            }
+            if (dE <= dS) {
+                showToast('Closing time must be after opening time.', 'error');
+                return;
+            }
+        }
         var submitBtn = document.getElementById('createSubmitBtn');
         function setCreating(on) {
             submitBtn.disabled = !!on;
@@ -590,6 +935,11 @@ $ab = '../../assets';
             const d = await r.json();
             if (d.success) {
                 showToast(d.message || 'Created.', 'success');
+                if (d.enrollment_notice) {
+                    setTimeout(function () {
+                        showToast(d.enrollment_notice, 'warning');
+                    }, 450);
+                }
                 setModalOpen(false);
                 e.target.reset();
                 loadEvalTable();

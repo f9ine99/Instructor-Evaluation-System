@@ -90,6 +90,8 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                     </div>
                 </header>
 
+                <div id="adminGapBanner" class="admin-gap-banner-root" hidden aria-live="polite"></div>
+
                 <div id="statsGrid" class="admin-overview-mount" aria-live="polite">
                     <p class="admin-overview-loading">Loading overview…</p>
                 </div>
@@ -104,7 +106,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                     </div>
                     <div>
                         <h2 class="admin-manage-title" id="adminManageHeading">Manage data</h2>
-                        <p class="admin-manage-lead">Directory of users, courses, and departments. Deactivating an item hides it from new activity while keeping audit history.</p>
+                        <p class="admin-manage-lead"><strong>Classes</strong> are live course offerings (catalog + instructor + term)—students are evaluated per class roster. Departments and user accounts anchor the rest.</p>
                     </div>
                 </header>
 
@@ -112,7 +114,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                     <div class="admin-manage-controls__primary">
                         <nav class="admin-manage-segment" role="tablist" aria-label="Dataset">
                             <button type="button" class="tab-btn admin-manage-segment__btn active" data-tab="users" role="tab" aria-selected="true">Users</button>
-                            <button type="button" class="tab-btn admin-manage-segment__btn" data-tab="courses" role="tab" aria-selected="false">Courses</button>
+                            <button type="button" class="tab-btn admin-manage-segment__btn" data-tab="courses" role="tab" aria-selected="false">Classes</button>
                             <button type="button" class="tab-btn admin-manage-segment__btn" data-tab="departments" role="tab" aria-selected="false">Departments</button>
                         </nav>
                         <p class="admin-manage-hint" id="manageDatasetHint">Use role filters below to load one role at a time.</p>
@@ -124,7 +126,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                             </span>
                             <span class="admin-add-student-cta__label">
                                 <span class="admin-add-student-cta__title">Add student</span>
-                                <span class="admin-add-student-cta__hint">Dept + optional enrollments</span>
+                                <span class="admin-add-student-cta__hint">Dept + class enrollments</span>
                             </span>
                         </button>
                         <button type="button" class="admin-add-instructor-cta" id="btnAddInstructor" style="display:none;" aria-label="Add an instructor">
@@ -133,13 +135,13 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                             </span>
                             <span class="admin-add-instructor-cta__label">
                                 <span class="admin-add-instructor-cta__title">Add instructor</span>
-                                <span class="admin-add-instructor-cta__hint">Faculty &amp; department</span>
+                                <span class="admin-add-instructor-cta__hint">Teaches department classes</span>
                             </span>
                         </button>
                         <button type="button" class="admin-add-staff-link" id="btnAddStaff" style="display:none;">Add staff (dean / HR / admin)</button>
                         <button type="button" class="admin-manage-course-btn" id="btnAddCourse" style="display:none;">
                             <span class="admin-manage-course-btn__icon" aria-hidden="true">+</span>
-                            Add course
+                            Add class
                         </button>
                         <button type="button" class="admin-add-staff-link" id="btnAddDepartment" style="display:none;" title="Create a department">+ Add department</button>
                     </div>
@@ -277,7 +279,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
 <div id="modalUser" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalUserTitle" aria-hidden="true">
     <div class="admin-modal-surface admin-modal-surface--user">
         <h2 id="modalUserTitle">Add student</h2>
-        <p class="admin-modal-lead" id="modalUserLead">Students belong to a department; you can enroll them in active courses in that department (enrollments).</p>
+        <p class="admin-modal-lead" id="modalUserLead">Students have a department and join <strong>classes</strong> (rosters) via enrollments — evaluations use those rosters.</p>
 
         <div id="cuStudentModeTabs" class="admin-modal-mode-tabs" style="display:none;" role="tablist" aria-label="Student creation mode">
             <button type="button" class="admin-modal-mode-tabs__btn is-active" role="tab" aria-selected="true" data-student-tab="single">One student</button>
@@ -346,11 +348,20 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         <div id="cuStudentPanelBulk" style="display:none;">
             <form id="formBulkImportStudents">
                 <p class="admin-field-hint" style="margin-top:0;">One student ID per line, or CSV: <code style="font-size:11px;">student_id,full name,email</code>. ID-only lines use the display name “New student” (change it later or include the name in CSV). Shared password; first login forces a new password.</p>
+                <div id="bulkClassLockBanner" class="admin-bulk-class-lock" role="note" hidden></div>
+                <input type="hidden" id="bulkClassCourseInput" name="bulk_class_course" value="">
                 <div class="form-group">
                     <label class="form-label" for="bulkDept">Department <span style="color:var(--error);">*</span></label>
                     <select class="form-select" id="bulkDept" name="department_id" required>
                         <option value="">Select…</option>
                     </select>
+                </div>
+                <div id="bulkEnrollmentCourseSection">
+                <fieldset class="admin-enroll-fieldset">
+                    <legend class="admin-enroll-legend">Additional class enrollments</legend>
+                    <p class="admin-field-hint" style="margin-top:0;">Optional when choosing department yourself. Tick extra classes (same department) or open a class from <strong>Manage → Classes → Class roster</strong> to import directly into one class.</p>
+                    <div id="bulkCourseChecks" class="admin-course-checks"></div>
+                </fieldset>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="bulkLines">Student IDs <span style="color:var(--error);">*</span></label>
@@ -376,10 +387,11 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
     </div>
 </div>
 
-<!-- Create course -->
+<!-- Create class (course offering — instructor + term + dept) -->
 <div id="modalCourse" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalCourseTitle" aria-hidden="true">
     <div class="admin-modal-surface">
-        <h2 id="modalCourseTitle">Add course</h2>
+        <h2 id="modalCourseTitle">Add class</h2>
+        <p class="admin-modal-lead" style="margin-top:-12px;margin-bottom:16px;font-size:13px;color:var(--text-muted);">One row here = how students enroll and how deans tie evaluations — think “Section / offering,” not catalog theory.</p>
         <form id="formCreateCourse">
             <div class="form-group">
                 <label class="form-label" for="ccCode">Course code <span style="color:var(--error);">*</span></label>
@@ -423,9 +435,28 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             </div>
             <div class="admin-modal-actions">
                 <button type="button" class="btn btn--secondary" data-close-modal="modalCourse">Cancel</button>
-                <button type="submit" class="btn-submit">Create course</button>
+                <button type="submit" class="btn-submit">Create class</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Class roster: view enrollment + bulk add to this class -->
+<div id="modalClassHub" class="dean-modal-overlay admin-class-hub-overlay" role="dialog" aria-modal="true" aria-labelledby="classHubTitle" aria-hidden="true">
+    <div class="admin-modal-surface admin-modal-surface--class-hub">
+        <h2 id="classHubTitle">Class roster</h2>
+        <div id="classHubMeta" class="admin-class-hub-meta"></div>
+        <div id="classHubRoster" class="admin-class-hub-roster" role="region" aria-label="Enrolled students"></div>
+        <div id="classHubEnrollSection" class="admin-class-hub-enroll">
+            <h3 class="admin-class-hub-enroll-title">Enroll existing students</h3>
+            <p class="admin-class-hub-enroll-lead">Active students in this class’s home department who are not on the roster yet.</p>
+            <div id="classHubStudentPicker" class="admin-class-hub-picker" role="group" aria-label="Students available to enroll"></div>
+        </div>
+        <div class="admin-modal-actions admin-class-hub-actions">
+            <button type="button" class="btn btn--secondary" data-close-modal="modalClassHub">Close</button>
+            <button type="button" class="admin-class-hub-action-btn admin-class-hub-action-btn--enroll" id="btnClassHubEnrollSelected" disabled>Enroll selected</button>
+            <button type="button" class="admin-class-hub-action-btn admin-class-hub-action-btn--bulk" id="btnClassHubBulkAdd">Bulk add new students</button>
+        </div>
     </div>
 </div>
 
@@ -433,7 +464,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
 <div id="modalDepartment" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalDeptTitle" aria-hidden="true">
     <div class="admin-modal-surface">
         <h2 id="modalDeptTitle">Add department</h2>
-        <p class="admin-modal-lead">Departments are created here first. You then assign them when adding students, instructors, deans, and courses.</p>
+        <p class="admin-modal-lead">Departments are created first — then instructors, classes (offerings), and student home departments tie to these units.</p>
         <form id="formCreateDepartment">
             <div class="form-group">
                 <label class="form-label" for="cdName">Department name <span style="color:var(--error);">*</span></label>
@@ -457,6 +488,9 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
     var lookups = { departments: [], users: [], courses: [] };
     var userModalMode = 'student';
     var studentBulkTab = 'single';
+    var pendingBulkClassContext = null;
+    var adminClassHubContext = null;
+    var lastManageCoursesPayload = [];
 
     function setStudentBulkTab(tab) {
         studentBulkTab = tab === 'bulk' ? 'bulk' : 'single';
@@ -472,6 +506,9 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         }
         if (singlePanel) singlePanel.style.display = studentBulkTab === 'single' ? 'block' : 'none';
         if (bulkPanel) bulkPanel.style.display = studentBulkTab === 'bulk' ? 'block' : 'none';
+        if (studentBulkTab === 'bulk') {
+            refreshBulkStudentCourseChecks();
+        }
     }
 
     var tabStrip = document.getElementById('cuStudentModeTabs');
@@ -588,7 +625,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         if (bar) bar.hidden = currentTab !== 'users';
         if (!pt) return;
         if (currentTab !== 'users') {
-            var panelTitles = { users: 'Users', courses: 'Courses', departments: 'Departments' };
+            var panelTitles = { users: 'Users', courses: 'Classes (course offerings)', departments: 'Departments' };
             pt.textContent = panelTitles[currentTab] || currentTab;
             return;
         }
@@ -681,7 +718,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             }
         });
         var datasetHints = {
-            courses: 'Courses are tied to a department and primary instructor.',
+            courses: 'Each row is one class offering (dept + instructor + term). Open Roster for enrolments. Classes with evaluations but an empty roster show Eval needs roster in the Enrolled column.',
             departments: 'Organizational units used when assigning users and catalog courses.'
         };
         var mh = document.getElementById('manageDatasetHint');
@@ -721,11 +758,32 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         });
     });
 
+    function clearBulkImportClassLockedUI() {
+        var bd = document.getElementById('bulkDept');
+        if (bd) bd.disabled = false;
+        var bi = document.getElementById('bulkClassCourseInput');
+        if (bi) bi.value = '';
+        var ban = document.getElementById('bulkClassLockBanner');
+        if (ban) {
+            ban.hidden = true;
+            ban.textContent = '';
+        }
+        var sec = document.getElementById('bulkEnrollmentCourseSection');
+        if (sec) sec.style.display = '';
+    }
+
     function setModalOpen(id, open) {
         var m = document.getElementById(id);
         if (!m) return;
         m.classList.toggle('is-open', open);
         m.setAttribute('aria-hidden', open ? 'false' : 'true');
+        if (!open && id === 'modalClassHub') {
+            adminClassHubContext = null;
+        }
+        if (!open && id === 'modalUser') {
+            pendingBulkClassContext = null;
+            clearBulkImportClassLockedUI();
+        }
     }
 
     document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
@@ -734,15 +792,17 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         });
     });
 
-    ['modalUser', 'modalCourse', 'modalDepartment'].forEach(function (mid) {
-        document.getElementById(mid).addEventListener('click', function (e) {
+    ['modalUser', 'modalCourse', 'modalDepartment', 'modalClassHub'].forEach(function (mid) {
+        var node = document.getElementById(mid);
+        if (!node) return;
+        node.addEventListener('click', function (e) {
             if (e.target.id === mid) setModalOpen(mid, false);
         });
     });
 
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
-        ['modalUser', 'modalCourse', 'modalDepartment'].forEach(function (mid) {
+        ['modalUser', 'modalCourse', 'modalDepartment', 'modalClassHub'].forEach(function (mid) {
             var el = document.getElementById(mid);
             if (el && el.classList.contains('is-open')) setModalOpen(mid, false);
         });
@@ -781,6 +841,29 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         }).join('');
     }
 
+    function refreshBulkStudentCourseChecks() {
+        var host = document.getElementById('bulkCourseChecks');
+        if (!host) return;
+        var bulkDeptSel = document.getElementById('bulkDept');
+        if (!bulkDeptSel) return;
+        var deptId = parseInt(bulkDeptSel.value, 10);
+        if (!deptId) {
+            host.innerHTML = '<p class="admin-field-hint">Select a department to list courses for enrollment.</p>';
+            return;
+        }
+        var rows = (lookups.courses || []).filter(function (c) {
+            return parseInt(c.department_id, 10) === deptId && c.status === 'active';
+        });
+        if (!rows.length) {
+            host.innerHTML = '<p class="admin-field-hint">No active courses in this department.</p>';
+            return;
+        }
+        host.innerHTML = rows.map(function (c) {
+            return '<label class="admin-course-check"><input type="checkbox" name="bulk_course" value="' + parseInt(c.id, 10) + '"><span>' +
+                escapeHtml(c.code) + ' — ' + escapeHtml(c.title) + ' <span style="opacity:0.75;">(' + escapeHtml(c.semester) + ' ' + escapeHtml(c.academic_year) + ')</span></span></label>';
+        }).join('');
+    }
+
     function openUserModal(mode) {
         document.getElementById('formCreateUser').reset();
         document.getElementById('cuCourseChecks').innerHTML = '';
@@ -805,11 +888,32 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         var bulkPanel = document.getElementById('cuStudentPanelBulk');
         var singlePanel = document.getElementById('cuStudentPanelSingle');
         if (mode === 'student') {
+            var pbGrab = pendingBulkClassContext;
+            pendingBulkClassContext = null;
+
             if (bulkTabs) bulkTabs.style.display = 'flex';
             fillDepartmentOptions(document.getElementById('bulkDept'), false);
             var bf = document.getElementById('formBulkImportStudents');
             if (bf) bf.reset();
-            setStudentBulkTab('single');
+            var bch = document.getElementById('bulkCourseChecks');
+            if (bch) bch.innerHTML = '';
+            clearBulkImportClassLockedUI();
+
+            if (pbGrab) {
+                document.getElementById('bulkDept').value = String(pbGrab.deptId);
+                document.getElementById('bulkDept').disabled = true;
+                document.getElementById('bulkClassCourseInput').value = String(pbGrab.courseId);
+                var bban = document.getElementById('bulkClassLockBanner');
+                bban.hidden = false;
+                bban.textContent = 'All imports are enrolled in this class: ' + pbGrab.label + '.';
+                document.getElementById('bulkEnrollmentCourseSection').style.display = 'none';
+                setStudentBulkTab('bulk');
+            } else {
+                document.getElementById('bulkClassLockBanner').hidden = true;
+                document.getElementById('bulkEnrollmentCourseSection').style.display = '';
+                setStudentBulkTab('single');
+                refreshBulkStudentCourseChecks();
+            }
         } else {
             if (bulkTabs) bulkTabs.style.display = 'none';
             if (bulkPanel) bulkPanel.style.display = 'none';
@@ -819,7 +923,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         if (mode === 'student') {
             roleHidden.value = 'student';
             title.textContent = 'Add student';
-            lead.textContent = 'Students have a home department (users.department_id). You may enroll them in active courses in that department via the enrollments table.';
+            lead.textContent = 'Use <strong>Manage → Classes → Class roster</strong> to add existing students or bulk-import new accounts into one class; here you can also add a single student.';
             uHint.textContent = 'Often a student ID (e.g. 2021001). Must be unique.';
             dLabel.textContent = 'Home department';
             dHint.textContent = 'Required. Course enrollments below are limited to this department.';
@@ -856,6 +960,9 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
 
     document.getElementById('cuDept').addEventListener('change', function () {
         if (userModalMode === 'student') refreshStudentCourseChecks();
+    });
+    document.getElementById('bulkDept').addEventListener('change', function () {
+        refreshBulkStudentCourseChecks();
     });
     document.getElementById('cuRoleStaff').addEventListener('change', function () {
         document.getElementById('cuRole').value = document.getElementById('cuRoleStaff').value;
@@ -959,12 +1066,20 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         }
         setBulkImportSubmitting(true);
         try {
-            await postAdmin({
+            var bulkChecked = [].slice.call(document.querySelectorAll('#bulkCourseChecks input[name="bulk_course"]:checked'));
+            var bulkCourseIds = bulkChecked.map(function (x) { return parseInt(x.value, 10); }).filter(function (id) { return !isNaN(id) && id > 0; });
+            var bulkPayload = {
                 action: 'bulk_import_students',
                 department_id: parseInt(deptVal, 10),
                 shared_password: pw,
                 students: lines
-            });
+            };
+            if (bulkCourseIds.length) bulkPayload.course_ids = bulkCourseIds;
+            var lockedClass = parseInt(document.getElementById('bulkClassCourseInput').value, 10);
+            if (!isNaN(lockedClass) && lockedClass > 0) {
+                bulkPayload.class_course_id = lockedClass;
+            }
+            await postAdmin(bulkPayload);
             showToast('Students imported.', 'success');
             setModalOpen('modalUser', false);
             e.target.reset();
@@ -1028,7 +1143,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                 semester: document.getElementById('ccSemester').value,
                 academic_year: document.getElementById('ccAcademicYear').value.trim()
             });
-            showToast('Course created.', 'success');
+            showToast('Class created.', 'success');
             setModalOpen('modalCourse', false);
             e.target.reset();
             loadDashboard();
@@ -1055,7 +1170,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         }
     });
 
-    var deactivatePrompts = { user: 'Deactivate this user account? They will no longer be able to sign in.', course: 'Deactivate this course? It will be hidden from new scheduling.', department: 'Deactivate this department?' };
+    var deactivatePrompts = { user: 'Deactivate this user account? They will no longer be able to sign in.', course: 'Deactivate this class offering? It will be hidden from new scheduling and roster actions.', department: 'Deactivate this department?' };
 
     async function deactivate(entitySingular, id) {
         if (!confirm(deactivatePrompts[entitySingular] || 'Continue?')) return;
@@ -1069,9 +1184,52 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         }
     }
 
+    function renderAdminEnrollmentGaps(gaps) {
+        var max = 12;
+        var slice = gaps.slice(0, max);
+        var lines = slice
+            .map(function (g) {
+                return (
+                    '<li><span class="admin-enrollment-gaps__sheet">' +
+                    escapeHtml(g.sheet_title || '—') +
+                    '</span> · ' +
+                    escapeHtml(g.course_code || '') +
+                    ' · <span class="admin-enrollment-gaps__status">' +
+                    escapeHtml(g.sheet_status || '') +
+                    '</span> · ' +
+                    escapeHtml(g.department_name || '') +
+                    '</li>'
+                );
+            })
+            .join('');
+        var more =
+            gaps.length > max
+                ? '<p class="admin-enrollment-gaps__more">Showing ' + max + ' of ' + gaps.length + '. Enroll students under <strong>Manage → Classes</strong> for each course.</p>'
+                : '';
+        return (
+            '<div class="admin-enrollment-gaps" role="region" aria-label="Evaluation roster gaps">' +
+            '<div class="admin-enrollment-gaps__icon" aria-hidden="true">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.85"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' +
+            '</div>' +
+            '<div class="admin-enrollment-gaps__body">' +
+            '<h3 class="admin-enrollment-gaps__title">Roster gap</h3>' +
+            '<p class="admin-enrollment-gaps__lead">These evaluations are in <strong>draft</strong>, <strong>scheduled</strong>, or <strong>open</strong>, but the linked class has <strong>no enrollments</strong>. Students cannot submit until you add rosters (<strong>Manage → Classes → Class roster</strong>).</p>' +
+            '<ul class="admin-enrollment-gaps__list">' +
+            lines +
+            '</ul>' +
+            more +
+            '</div></div>'
+        );
+    }
+
     function loadDashboard() {
         var statsEl = document.getElementById('statsGrid');
+        var gapEl = document.getElementById('adminGapBanner');
         function errStats(msg) {
+            if (gapEl) {
+                gapEl.hidden = true;
+                gapEl.innerHTML = '';
+            }
             statsEl.innerHTML =
                 '<div class="admin-overview-error" role="alert">' + escapeHtml(msg) + '</div>';
         }
@@ -1099,13 +1257,30 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                 '</article>'
             );
         }
-        fetch('/api/analytics.php?action=system_stats', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
-            .then(function (r) {
+        Promise.all([
+            fetch('/api/analytics.php?action=system_stats', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) {
+                return r.json().then(function (d) {
+                    return { r: r, d: d };
+                });
+            }),
+            fetch('/api/analytics.php?action=enrollment_gaps', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) {
                 return r.json().then(function (d) {
                     return { r: r, d: d };
                 });
             })
-            .then(function (x) {
+        ])
+            .then(function (pair) {
+                var x = pair[0];
+                var gx = pair[1];
+                if (gapEl) {
+                    if (gx.r.ok && gx.d.success && gx.d.gaps && gx.d.gaps.length) {
+                        gapEl.hidden = false;
+                        gapEl.innerHTML = renderAdminEnrollmentGaps(gx.d.gaps);
+                    } else {
+                        gapEl.hidden = true;
+                        gapEl.innerHTML = '';
+                    }
+                }
                 if (x.r.status === 401) {
                     errStats('Session expired. Sign in again.');
                     return;
@@ -1190,16 +1365,209 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                 refreshManageTableIfNeeded();
             })
             .catch(function () {
+                if (gapEl) {
+                    gapEl.hidden = true;
+                    gapEl.innerHTML = '';
+                }
                 errStats('Could not load dashboard.');
                 refreshManageTableIfNeeded();
             });
     }
 
     function tableColspan() {
-        if (currentTab === 'courses') return 7;
+        if (currentTab === 'courses') return 8;
         if (currentTab === 'departments') return 6;
         if (currentTab === 'users' && currentUserRoleFilter) return 5;
         return 6;
+    }
+
+    function syncClassHubEnrollBtnState() {
+        var picker = document.getElementById('classHubStudentPicker');
+        var btn = document.getElementById('btnClassHubEnrollSelected');
+        if (!picker || !btn || btn.dataset.loading === '1') return;
+        var n = picker.querySelectorAll('input[type="checkbox"][name="class_hub_enroll"]:checked').length;
+        btn.disabled = n === 0;
+    }
+
+    function renderClassHubRosterContent(rosterEl, rosterRes, rosterData) {
+        if (!rosterRes.ok || !rosterData.success) {
+            rosterEl.innerHTML =
+                '<p class="admin-class-hub-error">' + escapeHtml(rosterData.message || 'Could not load roster.') + '</p>';
+            return;
+        }
+        var n = parseInt(rosterData.count, 10) || 0;
+        var studs = Array.isArray(rosterData.students) ? rosterData.students : [];
+        if (n === 0) {
+            rosterEl.innerHTML =
+                '<p class="admin-class-hub-empty">No students on the roster yet. Enroll existing students below, or use <strong>Bulk add new students</strong> for new accounts.</p>';
+            return;
+        }
+        var lines = studs
+            .map(function (u) {
+                return (
+                    '<li>' +
+                    escapeHtml((u.full_name || u.username || '').trim() || '—') +
+                    ' <span class="admin-class-hub-roster__id">(' +
+                    escapeHtml(u.username || '') +
+                    ')</span></li>'
+                );
+            })
+            .join('');
+        var more =
+            n > studs.length
+                ? '<p class="admin-class-hub-more">Showing ' + studs.length + ' of ' + n + ' enrolled.</p>'
+                : '';
+        rosterEl.innerHTML =
+            '<p class="admin-class-hub-count"><strong>' +
+            n +
+            '</strong> enrolled</p><ul class="admin-class-hub-roster-list">' +
+            lines +
+            '</ul>' +
+            more;
+    }
+
+    function renderClassHubStudentPicker(enrollBtn, pickerEl, pickRes, pickData) {
+        if (!pickRes.ok || !pickData.success) {
+            enrollBtn.disabled = true;
+            pickerEl.innerHTML =
+                '<p class="admin-class-hub-error">' + escapeHtml(pickData.message || 'Could not load students for this class.') + '</p>';
+            return;
+        }
+        var all = Array.isArray(pickData.students) ? pickData.students : [];
+        var open = all.filter(function (s) {
+            return !s.enrolled;
+        });
+        if (!all.length) {
+            enrollBtn.disabled = true;
+            pickerEl.innerHTML =
+                '<p class="admin-class-hub-empty">No active students in this department yet. Add accounts via Manage → Users or <strong>Bulk add new students</strong>.</p>';
+            return;
+        }
+        if (!open.length) {
+            enrollBtn.disabled = true;
+            pickerEl.innerHTML =
+                '<p class="admin-class-hub-empty">Every active student in this department is already on this roster.</p>';
+            return;
+        }
+        pickerEl.innerHTML =
+            '<p class="admin-class-hub-pick-hint">' +
+            open.length +
+            ' student(s) available to add.</p>' +
+            '<ul class="admin-class-hub-pick-list">' +
+            open
+                .map(function (s) {
+                    var id = parseInt(s.id, 10);
+                    return (
+                        '<li><label class="admin-class-hub-pick-item">' +
+                        '<input type="checkbox" name="class_hub_enroll" value="' +
+                        id +
+                        '">' +
+                        '<span>' +
+                        escapeHtml((s.full_name || s.username || '').trim() || '—') +
+                        ' <span class="admin-class-hub-roster__id">(' +
+                        escapeHtml(s.username || '') +
+                        ')</span></span></label></li>'
+                    );
+                })
+                .join('') +
+            '</ul>';
+        enrollBtn.disabled = true;
+    }
+
+    async function reloadClassHubPanel() {
+        if (!adminClassHubContext || !adminClassHubContext.id) return;
+        var cid = adminClassHubContext.id;
+        var roster = document.getElementById('classHubRoster');
+        var picker = document.getElementById('classHubStudentPicker');
+        var enrollBtn = document.getElementById('btnClassHubEnrollSelected');
+        roster.innerHTML = '<p class="admin-class-hub-loading">Updating…</p>';
+        picker.innerHTML = '<p class="admin-class-hub-loading">Updating…</p>';
+        enrollBtn.disabled = true;
+        enrollBtn.dataset.loading = '1';
+        try {
+            var rosterRes = await fetch(
+                '/api/evaluations.php?action=course_enrollment_preview&course_id=' + encodeURIComponent(cid),
+                { credentials: 'same-origin', headers: { Accept: 'application/json' } }
+            );
+            var pickRes = await fetch(
+                '/api/admin.php?action=students_for_class_enrollment&course_id=' + encodeURIComponent(cid),
+                { credentials: 'same-origin', headers: { Accept: 'application/json' } }
+            );
+            var rosterData = await rosterRes.json().catch(function () {
+                return {};
+            });
+            var pickData = await pickRes.json().catch(function () {
+                return {};
+            });
+            renderClassHubRosterContent(roster, rosterRes, rosterData);
+            renderClassHubStudentPicker(enrollBtn, picker, pickRes, pickData);
+        } catch (e) {
+            roster.innerHTML = '<p class="admin-class-hub-error">Could not refresh roster.</p>';
+            picker.innerHTML = '<p class="admin-class-hub-error">Could not refresh student list.</p>';
+        } finally {
+            delete enrollBtn.dataset.loading;
+            syncClassHubEnrollBtnState();
+        }
+    }
+
+    async function openClassHubModal(c) {
+        adminClassHubContext = {
+            id: parseInt(c.id, 10),
+            department_id: parseInt(c.department_id, 10),
+            code: c.code || '',
+            title: c.title || '',
+            instructor_name: c.instructor_name || '',
+            semester: c.semester || '',
+            academic_year: c.academic_year || '',
+            department_name: c.department_name || ''
+        };
+        var meta = document.getElementById('classHubMeta');
+        var roster = document.getElementById('classHubRoster');
+        var picker = document.getElementById('classHubStudentPicker');
+        var enrollBtn = document.getElementById('btnClassHubEnrollSelected');
+        enrollBtn.disabled = true;
+        delete enrollBtn.dataset.loading;
+        meta.innerHTML =
+            '<p class="admin-class-hub-meta__title"><strong>' +
+            escapeHtml(adminClassHubContext.code) +
+            '</strong> · ' +
+            escapeHtml(adminClassHubContext.title) +
+            '</p>' +
+            '<p class="admin-class-hub-meta__sub">' +
+            escapeHtml(adminClassHubContext.department_name) +
+            ' · ' +
+            escapeHtml(adminClassHubContext.instructor_name) +
+            ' · ' +
+            escapeHtml(String(adminClassHubContext.semester)) +
+            ' ' +
+            escapeHtml(String(adminClassHubContext.academic_year)) +
+            '</p>';
+        roster.innerHTML = '<p class="admin-class-hub-loading">Loading roster…</p>';
+        picker.innerHTML = '<p class="admin-class-hub-loading">Loading eligible students…</p>';
+        setModalOpen('modalClassHub', true);
+        try {
+            var rosterRes = await fetch(
+                '/api/evaluations.php?action=course_enrollment_preview&course_id=' + encodeURIComponent(adminClassHubContext.id),
+                { credentials: 'same-origin', headers: { Accept: 'application/json' } }
+            );
+            var pickRes = await fetch(
+                '/api/admin.php?action=students_for_class_enrollment&course_id=' + encodeURIComponent(adminClassHubContext.id),
+                { credentials: 'same-origin', headers: { Accept: 'application/json' } }
+            );
+            var rosterData = await rosterRes.json().catch(function () {
+                return {};
+            });
+            var pickData = await pickRes.json().catch(function () {
+                return {};
+            });
+            renderClassHubRosterContent(roster, rosterRes, rosterData);
+            renderClassHubStudentPicker(enrollBtn, picker, pickRes, pickData);
+            syncClassHubEnrollBtnState();
+        } catch (err) {
+            roster.innerHTML = '<p class="admin-class-hub-error">Network error loading roster.</p>';
+            picker.innerHTML = '<p class="admin-class-hub-error">Network error loading students.</p>';
+            enrollBtn.disabled = true;
+        }
     }
 
     function loadTable() {
@@ -1214,16 +1582,23 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
             .then(function (x) {
                 if (x.r.status === 401) {
+                    if (currentTab === 'courses') lastManageCoursesPayload = [];
                     body.innerHTML = '<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--error">Session expired — sign in again.</td></tr>';
                     document.getElementById('managePanelCount').textContent = '';
                     return;
                 }
                 if (!x.r.ok || !x.d.success) {
+                    if (currentTab === 'courses') lastManageCoursesPayload = [];
                     body.innerHTML = '<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--error">' + escapeHtml(x.d.message || ('HTTP ' + x.r.status)) + '</td></tr>';
                     document.getElementById('managePanelCount').textContent = '';
                     return;
                 }
                 var data = Array.isArray(x.d.data) ? x.d.data : [];
+                if (currentTab === 'courses') {
+                    lastManageCoursesPayload = data;
+                } else {
+                    lastManageCoursesPayload = [];
+                }
                 var cnt = document.getElementById('managePanelCount');
                 if (cnt) cnt.textContent = data.length === 0 ? 'No records' : (data.length === 1 ? '1 record' : data.length + ' records');
 
@@ -1254,22 +1629,84 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                         return row;
                     }).join('') || ('<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--empty">' + escapeHtml(emptyLbl) + '</td></tr>');
                 } else if (currentTab === 'courses') {
-                    head.innerHTML = '<tr><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Department</th><th scope="col">Instructor</th><th scope="col">Term</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
+                    head.innerHTML =
+                        '<tr><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Department</th><th scope="col">Instructor</th><th scope="col">Term</th><th scope="col" class="admin-manage-mono admin-th-enrolled" title="Headcount on roster; &quot;Eval needs roster&quot; when a dean sheet is live but enrollment is empty.">Enrolled</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
                     body.innerHTML = data.map(function (c) {
                         var active = c.status === 'active';
+                        var enr = c.enrollment_count != null ? parseInt(c.enrollment_count, 10) : 0;
+                        if (isNaN(enr)) enr = 0;
+                        var evalGap = parseInt(c.evaluation_roster_gap, 10) === 1;
+                        var rosterBtn = active
+                            ? '<button type="button" class="table-action-btn table-action-btn--roster" data-act="class-roster" data-course-id="' +
+                              c.id +
+                              '">Roster</button> '
+                            : '<button type="button" class="table-action-btn" disabled title="Inactive class">Roster</button> ';
                         var btn = active
                             ? '<button type="button" class="table-action-btn" data-act="deactivate" data-entity="course" data-id="' + c.id + '">Deactivate</button>'
                             : '<button type="button" class="table-action-btn" disabled>—</button>';
-                        return '<tr><td class="admin-manage-mono">' + escapeHtml(c.code) + '</td><td>' + escapeHtml(c.title) + '</td><td>' + escapeHtml(c.department_name) + '</td><td>' + escapeHtml(c.instructor_name) + '</td><td>' + escapeHtml(c.semester + ' ' + c.academic_year) + '</td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(c.status) + '</span></td><td class="admin-manage-table__actions">' + btn + '</td></tr>';
-                    }).join('') || '<tr><td colspan="7" class="admin-manage-msg admin-manage-msg--empty">No courses in the catalog.</td></tr>';
+                        var enrolledCell =
+                            '<span class="admin-course-enrolled-num">' +
+                            enr +
+                            '</span>' +
+                            (evalGap
+                                ? '<br><span class="admin-course-eval-gap-chip" title="This class has an evaluation in draft, scheduled, or open, but no enrollments yet. Open Roster to add students — otherwise nobody can submit.">Eval needs roster</span>'
+                                : '');
+                        return (
+                            '<tr class="' +
+                            (evalGap ? 'admin-course-row--eval-gap' : '') +
+                            '"><td class="admin-manage-mono">' +
+                            escapeHtml(c.code) +
+                            '</td><td>' +
+                            escapeHtml(c.title) +
+                            '</td><td>' +
+                            escapeHtml(c.department_name) +
+                            '</td><td>' +
+                            escapeHtml(c.instructor_name) +
+                            '</td><td>' +
+                            escapeHtml(c.semester + ' ' + c.academic_year) +
+                            '</td><td class="admin-course-enrolled-cell">' +
+                            enrolledCell +
+                            '</td><td><span class="status-badge ' +
+                            (active ? 'status-active' : 'status-pending') +
+                            '">' +
+                            escapeHtml(c.status) +
+                            '</span></td><td class="admin-manage-table__actions">' +
+                            rosterBtn +
+                            btn +
+                            '</td></tr>'
+                        );
+                    }).join('') ||
+                        '<tr><td colspan="' +
+                        cs +
+                        '" class="admin-manage-msg admin-manage-msg--empty">No class offerings yet — add one to start enrolments.</td></tr>';
                 } else {
-                    head.innerHTML = '<tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Head</th><th scope="col">Faculty</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
+                    head.innerHTML =
+                        '<tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Department head</th><th scope="col">Faculty</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
                     body.innerHTML = data.map(function (d) {
                         var active = d.status === 'active';
                         var btn = active
                             ? '<button type="button" class="table-action-btn" data-act="deactivate" data-entity="department" data-id="' + d.id + '">Deactivate</button>'
                             : '<button type="button" class="table-action-btn" disabled>—</button>';
-                        return '<tr><td class="admin-manage-mono">' + d.id + '</td><td class="admin-manage-strong">' + escapeHtml(d.name) + '</td><td>' + escapeHtml(d.head_name || '—') + '</td><td>' + escapeHtml(String(d.faculty_count)) + '</td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(d.status) + '</span></td><td class="admin-manage-table__actions">' + btn + '</td></tr>';
+                        var headLabel = (d.head_name != null && String(d.head_name).trim() !== '')
+                            ? escapeHtml(String(d.head_name).trim())
+                            : '<span class="admin-manage-placeholder">No head assigned</span>';
+                        return (
+                            '<tr><td class="admin-manage-mono">' +
+                            d.id +
+                            '</td><td class="admin-manage-strong">' +
+                            escapeHtml(d.name) +
+                            '</td><td>' +
+                            headLabel +
+                            '</td><td>' +
+                            escapeHtml(String(d.faculty_count)) +
+                            '</td><td><span class="status-badge ' +
+                            (active ? 'status-active' : 'status-pending') +
+                            '">' +
+                            escapeHtml(d.status) +
+                            '</span></td><td class="admin-manage-table__actions">' +
+                            btn +
+                            '</td></tr>'
+                        );
                     }).join('') || '<tr><td colspan="6" class="admin-manage-msg admin-manage-msg--empty">No departments yet — add one to get started.</td></tr>';
                 }
 
@@ -1280,10 +1717,83 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                 });
             })
             .catch(function () {
+                if (currentTab === 'courses') lastManageCoursesPayload = [];
                 body.innerHTML = '<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--error">Could not load directory.</td></tr>';
                 var c = document.getElementById('managePanelCount');
                 if (c) c.textContent = '';
             });
+    }
+
+    document.getElementById('tableBody').addEventListener('click', function (e) {
+        var br = e.target.closest('[data-act="class-roster"]');
+        if (!br || br.disabled) return;
+        var cid = parseInt(br.getAttribute('data-course-id'), 10);
+        if (isNaN(cid) || cid <= 0) return;
+        var row = lastManageCoursesPayload.find(function (c) {
+            return parseInt(c.id, 10) === cid;
+        });
+        if (row) openClassHubModal(row);
+    });
+
+    var btnClassHubBulk = document.getElementById('btnClassHubBulkAdd');
+    if (btnClassHubBulk) {
+        btnClassHubBulk.addEventListener('click', function () {
+            if (!adminClassHubContext || !adminClassHubContext.id) return;
+            pendingBulkClassContext = {
+                courseId: adminClassHubContext.id,
+                deptId: adminClassHubContext.department_id,
+                label: adminClassHubContext.code + ' — ' + adminClassHubContext.title
+            };
+            setModalOpen('modalClassHub', false);
+            openUserModal('student');
+        });
+    }
+
+    var modalClassHubNode = document.getElementById('modalClassHub');
+    if (modalClassHubNode) {
+        modalClassHubNode.addEventListener('change', function (e) {
+            var t = e.target;
+            if (t && t.matches && t.matches('#classHubStudentPicker input[name="class_hub_enroll"]')) {
+                syncClassHubEnrollBtnState();
+            }
+        });
+    }
+
+    var btnClassHubEnrollSel = document.getElementById('btnClassHubEnrollSelected');
+    if (btnClassHubEnrollSel) {
+        btnClassHubEnrollSel.addEventListener('click', async function () {
+            if (!adminClassHubContext || !adminClassHubContext.id) return;
+            var ids = []
+                .slice.call(document.querySelectorAll('#classHubStudentPicker input[name="class_hub_enroll"]:checked'))
+                .map(function (cb) {
+                    return parseInt(cb.value, 10);
+                })
+                .filter(function (id) {
+                    return !isNaN(id) && id > 0;
+                });
+            if (!ids.length) return;
+            var bulkAddBtn = document.getElementById('btnClassHubBulkAdd');
+            btnClassHubEnrollSel.dataset.loading = '1';
+            btnClassHubEnrollSel.disabled = true;
+            if (bulkAddBtn) bulkAddBtn.disabled = true;
+            try {
+                var resp = await postAdmin({
+                    action: 'enroll_students_in_course',
+                    course_id: adminClassHubContext.id,
+                    student_ids: ids
+                });
+                showToast(resp.message || 'Students enrolled.', 'success');
+                await reloadClassHubPanel();
+                refreshManageTableIfNeeded();
+                await loadLookups();
+            } catch (err) {
+                showToast(err.message || 'Enrollment failed.', 'error');
+            } finally {
+                if (bulkAddBtn) bulkAddBtn.disabled = false;
+                delete btnClassHubEnrollSel.dataset.loading;
+                syncClassHubEnrollBtnState();
+            }
+        });
     }
 
     document.getElementById('logoutBtn').addEventListener('click', async function () {
