@@ -12,6 +12,7 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../services/EvaluationService.php';
+require_once __DIR__ . '/../services/AnonymizationService.php';
 
 AuthService::initSession();
 
@@ -45,6 +46,18 @@ function handleGet(): void {
             if (!AuthService::hasRole('student')) {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'Students only.']);
+                return;
+            }
+
+            try {
+                AnonymizationService::requireAppSecret();
+            } catch (RuntimeException $e) {
+                error_log('[submissions/eligible] ' . $e->getMessage());
+                http_response_code(503);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Application misconfiguration: set APP_SECRET in .env (see .env.example).',
+                ]);
                 return;
             }
 

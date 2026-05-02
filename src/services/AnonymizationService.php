@@ -11,18 +11,62 @@ require_once __DIR__ . '/../config/database.php';
 
 class AnonymizationService {
 
+    /** @var string|null Cached secret after first successful resolution */
+    private static ?string $hmacSecretCache = null;
+
+    /**
+     * Resolved APP_SECRET for HMAC (required, min strength). Cached per request.
+     *
+     * @throws RuntimeException Missing, too short, or known-weak placeholder values
+     */
+    private static function hmacSecret(): string {
+        if (self::$hmacSecretCache !== null) {
+            return self::$hmacSecretCache;
+        }
+
+        $secret = trim(Database::getConfig('APP_SECRET', ''));
+        $weak = [
+            'default-insecure-secret-change-me',
+            'change-this-to-a-random-64-char-string',
+        ];
+        if ($secret === '') {
+            throw new RuntimeException(
+                'APP_SECRET is not set in .env. Generate one with: openssl rand -hex 32'
+            );
+        }
+        foreach ($weak as $w) {
+            if (strcasecmp($secret, $w) === 0) {
+                throw new RuntimeException(
+                    'APP_SECRET is still set to an example/insecure placeholder. Replace it in .env with a random string (openssl rand -hex 32).'
+                );
+            }
+        }
+        if (strlen($secret) < 32) {
+            throw new RuntimeException('APP_SECRET must be at least 32 characters.');
+        }
+
+        self::$hmacSecretCache = $secret;
+
+        return self::$hmacSecretCache;
+    }
+
+    /** Fail fast for API bootstrap (eligible list). @throws RuntimeException */
+    public static function requireAppSecret(): void {
+        self::hmacSecret();
+    }
+
     /**
      * Generate a deterministic submission token for a student + evaluation sheet pair.
-     * 
+     *
      * Token = HMAC-SHA256(studentId:sheetId, APP_SECRET)
-     * 
+     *
      * This ensures:
      * - Same student + sheet always produces the same token (deduplication)
-     * - Token cannot be reversed to find the student ID
+     * - Token cannot be reversed to find the student ID without the secret and brute force
      * - Different secrets produce different tokens (environment isolation)
      */
     public static function generateSubmissionToken(int $studentId, int $evaluationSheetId): string {
-        $secret = Database::getConfig('APP_SECRET', 'default-insecure-secret-change-me');
+        $secret = self::hmacSecret();
         $payload = $studentId . ':' . $evaluationSheetId;
         return hash_hmac('sha256', $payload, $secret);
     }
@@ -56,6 +100,14 @@ class AnonymizationService {
      * Returns: ['eligible' => bool, 'reason' => string]
      */
     public static function validateEligibility(int $studentId, int $evaluationSheetId): array {
+        try {
+            self::hmacSecret();
+        } catch (RuntimeException $e) {
+            error_log('Anonymization misconfiguration: ' . $e->getMessage());
+
+            return ['eligible' => false, 'reason' => 'Evaluations are temporarily unavailable.'];
+        }
+
         $db = Database::getConnection();
 
         // 1. Get the evaluation sheet
