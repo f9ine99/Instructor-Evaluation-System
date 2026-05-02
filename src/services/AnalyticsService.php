@@ -106,6 +106,20 @@ class AnalyticsService {
         return $stmt->fetchAll();
     }
 
+    /**
+     * Active instructors in a department (for dean evaluation form picker — no analytics join).
+     */
+    public static function listInstructorsInDepartment(int $departmentId): array {
+        $db = Database::getConnection();
+        $stmt = $db->prepare(
+            'SELECT id, full_name FROM users
+             WHERE role = "instructor" AND status = "active" AND department_id = :dept
+             ORDER BY full_name ASC'
+        );
+        $stmt->execute([':dept' => $departmentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // =====================================================
     // DEPARTMENT-LEVEL ANALYTICS
     // =====================================================

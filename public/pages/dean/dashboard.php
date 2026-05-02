@@ -213,7 +213,7 @@ $ab = '../../assets';
                     </span>
                     <div class="dean-form-section__head-text">
                         <h3 class="dean-form-section__title">Course &amp; instructor</h3>
-                        <p class="dean-form-section__lead" id="createIdsHelp">Enter the numeric course ID and the instructor’s user ID from your catalog and directory.</p>
+                        <p class="dean-form-section__lead">Link this sheet to a course (by ID) and an instructor from your department (by name).</p>
                     </div>
                 </div>
                 <div class="form-row-2 dean-form-card__grid">
@@ -223,17 +223,16 @@ $ab = '../../assets';
                             <span class="dean-input-affix__icon" aria-hidden="true">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                             </span>
-                            <input type="number" min="1" class="form-input dean-modal-input dean-input-affix__input" id="createCourseId" name="course_id" required inputmode="numeric" autocomplete="off" aria-describedby="createIdsHelp">
+                            <input type="number" min="1" class="form-input dean-modal-input dean-input-affix__input" id="createCourseId" name="course_id" required inputmode="numeric" autocomplete="off" aria-describedby="createCourseHint">
                         </div>
+                        <p class="dean-field-hint" id="createCourseHint">Numeric ID from your course catalog.</p>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="createInstructorId">Instructor user ID <span class="dean-req" aria-hidden="true">*</span></label>
-                        <div class="dean-input-affix">
-                            <span class="dean-input-affix__icon" aria-hidden="true">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                            </span>
-                            <input type="number" min="1" class="form-input dean-modal-input dean-input-affix__input" id="createInstructorId" name="instructor_id" required inputmode="numeric" autocomplete="off" aria-describedby="createIdsHelp">
-                        </div>
+                        <label class="form-label" for="createInstructorId">Instructor <span class="dean-req" aria-hidden="true">*</span></label>
+                        <select class="form-select dean-modal-select" id="createInstructorId" name="instructor_id" required aria-describedby="createInstructorHint">
+                            <option value="">Loading instructors…</option>
+                        </select>
+                        <p class="dean-field-hint" id="createInstructorHint">Select by name — active instructors in your department only.</p>
                     </div>
                 </div>
             </div>
@@ -349,6 +348,10 @@ $ab = '../../assets';
         m.classList.toggle('is-open', open);
         m.setAttribute('aria-hidden', open ? 'false' : 'true');
         if (open) {
+            var insSel = document.getElementById('createInstructorId');
+            if (insSel && insSel.options.length === 1 && /loading/i.test(insSel.options[0].textContent)) {
+                loadDepartmentInstructorPicker();
+            }
             document.getElementById('createTitle').focus();
         }
     }
@@ -421,6 +424,37 @@ $ab = '../../assets';
         }
 
         loadEvalTable();
+        loadDepartmentInstructorPicker();
+    }
+
+    async function loadDepartmentInstructorPicker() {
+        var sel = document.getElementById('createInstructorId');
+        if (!sel) return;
+        try {
+            var r = await fetch('/api/analytics.php?action=department_instructors', {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' }
+            });
+            var d = await r.json();
+            if (!r.ok || !d.success || !d.instructors) {
+                sel.innerHTML = '<option value="">' + escapeHtml(d.message || 'Could not load instructors') + '</option>';
+                return;
+            }
+            if (!d.instructors.length) {
+                sel.innerHTML = '<option value="">No instructors in your department</option>';
+                return;
+            }
+            var html = '<option value="">Select an instructor…</option>';
+            d.instructors.forEach(function (u) {
+                var id = parseInt(u.id, 10);
+                if (!isNaN(id)) {
+                    html += '<option value="' + id + '">' + escapeHtml(u.full_name) + '</option>';
+                }
+            });
+            sel.innerHTML = html;
+        } catch (e) {
+            sel.innerHTML = '<option value="">Failed to load instructors</option>';
+        }
     }
 
     async function loadEvalTable() {

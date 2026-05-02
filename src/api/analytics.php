@@ -40,6 +40,33 @@ switch ($action) {
             'instructors' => AnalyticsService::getAllInstructorSummaries($_GET['academic_year'] ?? null, $_GET['semester'] ?? null, $deptFilter),
         ]);
         break;
+    case 'department_instructors':
+        if (!AuthService::hasRole('dean', 'hr', 'admin')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            exit;
+        }
+        $deptId = null;
+        if (AuthService::hasRole('dean')) {
+            $deptId = AuthService::getDepartmentId();
+            if (!$deptId) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No department assigned.']);
+                exit;
+            }
+        } else {
+            $deptId = (int) ($_GET['department_id'] ?? 0);
+            if ($deptId <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'department_id is required.']);
+                exit;
+            }
+        }
+        echo json_encode([
+            'success' => true,
+            'instructors' => AnalyticsService::listInstructorsInDepartment($deptId),
+        ]);
+        break;
     case 'department_performance':
         if (!AuthService::hasRole('dean','hr','admin')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
         echo json_encode(['success'=>true,'departments'=>AnalyticsService::getDepartmentPerformance($_GET['academic_year']??null)]); break;
