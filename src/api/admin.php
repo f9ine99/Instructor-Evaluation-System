@@ -34,19 +34,71 @@ if ($method === 'GET' && $action === 'list') {
 } elseif ($method === 'POST' && $action === 'create') {
     switch ($entity) {
         case 'user':
-            $hash = password_hash($input['password'] ?? 'password123', PASSWORD_BCRYPT);
+            $username = trim($input['username'] ?? '');
+            $fullName = trim($input['full_name'] ?? '');
+            $role = $input['role'] ?? '';
+            $allowedRoles = ['student', 'instructor', 'dean', 'hr', 'admin'];
+            if ($username === '' || $fullName === '' || !in_array($role, $allowedRoles, true)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Username, full name, and a valid role are required.']);
+                exit;
+            }
+            if (empty($input['password']) || strlen((string) $input['password']) < 8) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters.']);
+                exit;
+            }
+            $deptId = $input['department_id'] ?? null;
+            $deptId = ($deptId === '' || $deptId === null) ? null : (int) $deptId;
+            $hash = password_hash((string) $input['password'], PASSWORD_BCRYPT);
             $stmt = $db->prepare('INSERT INTO users (username, password_hash, full_name, email, role, department_id, status) VALUES (?,?,?,?,?,?,?)');
-            $stmt->execute([$input['username'],$hash,$input['full_name'],$input['email']??null,$input['role'],$input['department_id']??null,'active']);
-            AuthService::logAudit(AuthService::getUserId(),'user_created','user',(int)$db->lastInsertId(),"Created user: {$input['username']}");
+            try {
+                $stmt->execute([$username, $hash, $fullName, $input['email'] ?? null, $role, $deptId, 'active']);
+            } catch (PDOException $e) {
+                if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate') !== false) {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'That username is already taken.']);
+                    exit;
+                }
+                throw $e;
+            }
+            AuthService::logAudit(AuthService::getUserId(),'user_created','user',(int)$db->lastInsertId(),"Created user: {$username}");
             echo json_encode(['success'=>true,'message'=>'User created.','id'=>$db->lastInsertId()]); break;
         case 'course':
+            $code = trim($input['code'] ?? '');
+            $title = trim($input['title'] ?? '');
+            $dept = (int) ($input['department_id'] ?? 0);
+            $sem = $input['semester'] ?? '';
+            $year = trim($input['academic_year'] ?? '');
+            $inst = (int) ($input['instructor_id'] ?? 0);
+            $allowedSem = ['I', 'II', 'Summer'];
+            if ($code === '' || $title === '' || $dept <= 0 || !in_array($sem, $allowedSem, true) || $year === '' || $inst <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'All course fields except program/year level are required.']);
+                exit;
+            }
             $stmt = $db->prepare('INSERT INTO courses (code,title,department_id,program,year_level,semester,academic_year,instructor_id) VALUES (?,?,?,?,?,?,?,?)');
-            $stmt->execute([$input['code'],$input['title'],$input['department_id'],$input['program']??null,$input['year_level']??null,$input['semester'],$input['academic_year'],$input['instructor_id']]);
-            AuthService::logAudit(AuthService::getUserId(),'course_created','course',(int)$db->lastInsertId(),"Created course: {$input['title']}");
+            $stmt->execute([
+                $code,
+                $title,
+                $dept,
+                $input['program'] ?? null,
+                $input['year_level'] ?? null,
+                $sem,
+                $year,
+                $inst,
+            ]);
+            AuthService::logAudit(AuthService::getUserId(),'course_created','course',(int)$db->lastInsertId(),"Created course: {$title}");
             echo json_encode(['success'=>true,'message'=>'Course created.','id'=>$db->lastInsertId()]); break;
         case 'department':
+            $name = trim($input['name'] ?? '');
+            if ($name === '') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Department name is required.']);
+                exit;
+            }
             $stmt = $db->prepare('INSERT INTO departments (name, status) VALUES (?, "active")');
-            $stmt->execute([$input['name']]);
+            $stmt->execute([$name]);
             echo json_encode(['success'=>true,'message'=>'Department created.','id'=>$db->lastInsertId()]); break;
         default:
             http_response_code(400); echo json_encode(['success'=>false,'message'=>'Unknown entity']); break;
@@ -56,6 +108,11 @@ if ($method === 'GET' && $action === 'list') {
     if ($id <= 0) { http_response_code(400); echo json_encode(['success'=>false,'message'=>'ID required']); exit; }
     switch ($entity) {
         case 'user':
+            if ($id === AuthService::getUserId()) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'You cannot deactivate your own account.']);
+                exit;
+            }
             $db->prepare('UPDATE users SET status="inactive" WHERE id=?')->execute([$id]);
             AuthService::logAudit(AuthService::getUserId(),'user_deactivated','user',$id,null);
             echo json_encode(['success'=>true,'message'=>'User deactivated.']); break;

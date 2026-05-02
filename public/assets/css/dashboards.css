@@ -1065,3 +1065,108 @@ button.nav-item {
     transform: rotate(360deg);
   }
 }
+
+/* Admin dashboard — management modals & toolbar */
+.admin-dashboard .section-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-dashboard .section-heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-modal-surface {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  max-width: 520px;
+  width: 100%;
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.admin-dashboard .admin-modal-surface h2 {
+  margin: 0 0 20px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-modal-surface .form-group {
+  margin-bottom: 14px;
+}
+
+.admin-dashboard .admin-modal-surface .form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.admin-dashboard .admin-modal-surface .form-input,
+.admin-dashboard .admin-modal-surface .form-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 13px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in srgb, var(--input-border) 88%, rgba(var(--accent-primary-rgb), 0.12));
+  border-radius: 10px;
+}
+
+.admin-dashboard .admin-modal-surface .form-input:focus,
+.admin-dashboard .admin-modal-surface .form-select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--input-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+}
+
+.admin-dashboard .admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--card-border);
+}
+
+.admin-dashboard .table-action-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  cursor: pointer;
+}
+
+.admin-dashboard .table-action-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.admin-dashboard .table-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-dashboard button.nav-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
