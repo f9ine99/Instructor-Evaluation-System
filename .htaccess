@@ -1,0 +1,27 @@
+# HOPE Instructor Evaluation System
+# Apache Configuration
+
+# Deny access to sensitive files
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Deny access to src/ directory (should be outside web root in production)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Block access to src/ and database/ directories
+    RewriteRule ^src/ - [F,L]
+    RewriteRule ^database/ - [F,L]
+    
+    # Redirect root to public/index.php
+    RewriteCond %{REQUEST_URI} ^/$
+    RewriteRule ^$ public/index.php [L]
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
