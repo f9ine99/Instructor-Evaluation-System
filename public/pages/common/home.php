@@ -20,6 +20,7 @@
 </head>
 
 <body class="home-page">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="page-bg-animation" aria-hidden="true">
         <div class="pointer-glow"></div>
         <div class="pointer-glow aura-two"></div>
@@ -34,24 +35,20 @@
     </div>
     <header class="navbar-container">
         <div class="navbar-inner">
-            <a href="#" class="logo">HOPE</a>
+            <a href="home.php" class="logo">HOPE</a>
 
             <div class="nav-actions">
-                <nav class="nav-links">
-                    <!-- Links removed for minimalist UI -->
-                </nav>
-
                 <div class="nav-pill-actions">
                     <div class="dropdown">
-                        <button class="nav-home-btn" id="loginDropdownBtn">
+                        <button type="button" class="nav-home-btn" id="loginDropdownBtn" aria-expanded="false" aria-haspopup="true" aria-controls="loginDropdownMenu">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" style="width: 16px; height: 16px;">
+                                stroke="currentColor" class="home-login-icon" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
                             Login Portal
                         </button>
-                        <div class="dropdown-content">
+                        <div class="dropdown-content" id="loginDropdownMenu" role="region" aria-label="Login portals">
                             <div class="dropdown-header">
                                 <span>Select Portal</span>
                             </div>
@@ -127,7 +124,7 @@
         </div>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
 
     <!-- Hero Section -->
     <div class="hero-section">
@@ -144,10 +141,10 @@
         </p>
 
         <div class="fadeInUp" style="animation-delay: 0.8s;">
-            <a href="#" class="hero-cta" id="heroCta">
+            <button type="button" class="hero-cta" id="heroCta">
                 Get Started
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </a>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
         </div>
 
     </div>
@@ -205,28 +202,38 @@
         const loginDropdownBtn = document.getElementById('loginDropdownBtn');
         const dropdown = loginDropdownBtn.closest('.dropdown');
 
+        function setDropdownOpen(open) {
+            dropdown.classList.toggle('active', open);
+            loginDropdownBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
         function toggleDropdown(e) {
             e.stopPropagation();
-            dropdown.classList.toggle('active');
+            setDropdownOpen(!dropdown.classList.contains('active'));
         }
 
         loginDropdownBtn.addEventListener('click', toggleDropdown);
-        
+
         const heroCta = document.getElementById('heroCta');
         if (heroCta) {
             heroCta.addEventListener('click', (e) => {
-                e.preventDefault();
-                toggleDropdown(e);
-                // Scroll to top to see the dropdown if needed
+                e.stopPropagation();
+                setDropdownOpen(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                loginDropdownBtn.focus();
             });
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!dropdown.contains(e.target)) {
-                dropdown.classList.remove('active');
+                setDropdownOpen(false);
             }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape' || !dropdown.classList.contains('active')) return;
+            setDropdownOpen(false);
+            loginDropdownBtn.focus();
         });
 
         // Smooth scroll

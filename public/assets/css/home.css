@@ -1,12 +1,38 @@
-/* 
+/*
  * HOPE Instructor Evaluation System - Home Styling
- * Theme: Minimalist Professional (Slate & Indigo)
+ * Theme: Minimalist Professional (Slate & Emerald)
  */
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    z-index: 10000;
+    padding: 12px 20px;
+    background: var(--accent-primary);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+}
+
+.skip-link:focus {
+    left: 16px;
+    top: 16px;
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
 
 body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     overflow-x: hidden;
+}
+
+.home-login-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
 }
 
 .home-page {
@@ -284,8 +310,6 @@ html.light-mode body.home-page .dropdown-content a {
 /* Navbar relies on layout.css for floating pill design */
 
 /* Hero Section - Minimalist */
-
-/* Hero Section - Minimalist */
 .hero-section {
     position: relative;
     padding: 190px 24px 150px;
@@ -435,6 +459,13 @@ html.light-mode .hero-title {
     position: relative;
     overflow: hidden;
     animation: ctaFloat 4.2s ease-in-out infinite;
+}
+
+button.hero-cta {
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .hero-cta::after {
@@ -707,8 +738,19 @@ html.light-mode .hero-title {
     .hero-title,
     .hero-title .hero-letter,
     .hero-cta,
-    .hero-cta::after {
+    .hero-cta::after,
+    .fadeInUp {
         animation: none !important;
+    }
+
+    .hero-title .hero-letter {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .fadeInUp {
+        opacity: 1 !important;
+        transform: none !important;
     }
 }
 

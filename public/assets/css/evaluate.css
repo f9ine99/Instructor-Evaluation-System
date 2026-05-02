@@ -18,6 +18,29 @@ body.evaluate-form-page {
   gap: 10px;
 }
 
+/* Top bar: Home matches Logout weight (form actions stay visually primary) */
+.evaluate-form-page a.eval-nav-home.nav-home-btn {
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
+  box-shadow: none;
+  transform: none;
+  font-weight: 600;
+}
+
+.evaluate-form-page a.eval-nav-home.nav-home-btn:hover {
+  transform: none;
+  background: color-mix(in srgb, var(--accent-primary) 12%, var(--input-bg));
+  border-color: var(--accent-primary);
+  box-shadow: none;
+}
+
+.evaluate-form-page .eval-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 /* Cards: keep static shadow (no hover lift) on this long form */
 .evaluate-form-page .card:hover {
   transform: none;
