@@ -1,0 +1,41 @@
+<?php
+header('Content-Type: application/json');
+require_once __DIR__ . '/../services/AuthService.php';
+require_once __DIR__ . '/../services/AnalyticsService.php';
+
+AuthService::initSession();
+if (!AuthService::isLoggedIn()) { http_response_code(401); echo json_encode(['success'=>false,'message'=>'Auth required']); exit; }
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') { http_response_code(405); echo json_encode(['success'=>false,'message'=>'Method not allowed']); exit; }
+
+$action = $_GET['action'] ?? 'system_stats';
+switch ($action) {
+    case 'system_stats':
+        if (!AuthService::hasRole('admin','dean','hr')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
+        echo json_encode(['success'=>true,'stats'=>AnalyticsService::getSystemStats()]); break;
+    case 'instructor_averages':
+        $id = AuthService::hasRole('instructor') ? AuthService::getUserId() : (int)($_GET['instructor_id']??0);
+        echo json_encode(['success'=>true,'data'=>AnalyticsService::getInstructorAverages($id,$_GET['academic_year']??null,$_GET['semester']??null)]); break;
+    case 'all_instructors':
+        if (!AuthService::hasRole('dean','hr','admin')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
+        echo json_encode(['success'=>true,'instructors'=>AnalyticsService::getAllInstructorSummaries($_GET['academic_year']??null,$_GET['semester']??null)]); break;
+    case 'department_performance':
+        if (!AuthService::hasRole('dean','hr','admin')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
+        echo json_encode(['success'=>true,'departments'=>AnalyticsService::getDepartmentPerformance($_GET['academic_year']??null)]); break;
+    case 'instructor_trend':
+        $id = AuthService::hasRole('instructor') ? AuthService::getUserId() : (int)($_GET['instructor_id']??0);
+        echo json_encode(['success'=>true,'trend'=>AnalyticsService::getInstructorTrend($id),'change'=>AnalyticsService::getInstructorTrendChange($id)]); break;
+    case 'performance_alerts':
+        if (!AuthService::hasRole('hr','admin')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
+        echo json_encode(['success'=>true,'alerts'=>AnalyticsService::getPerformanceAlerts()]); break;
+    case 'instructor_comments':
+        $id = AuthService::hasRole('instructor') ? AuthService::getUserId() : (int)($_GET['instructor_id']??0);
+        echo json_encode(['success'=>true,'comments'=>AnalyticsService::getInstructorComments($id)]); break;
+    case 'sheet_comments':
+        if (!AuthService::hasRole('dean','admin')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
+        echo json_encode(['success'=>true,'comments'=>AnalyticsService::getSheetComments((int)($_GET['sheet_id']??0))]); break;
+    case 'recent_submissions':
+        $deptId = AuthService::hasRole('dean') ? AuthService::getDepartmentId() : null;
+        echo json_encode(['success'=>true,'submissions'=>AnalyticsService::getRecentSubmissions((int)($_GET['limit']??10),$deptId)]); break;
+    default:
+        http_response_code(400); echo json_encode(['success'=>false,'message'=>'Unknown action']); break;
+}
