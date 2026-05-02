@@ -1481,6 +1481,48 @@ button.nav-item {
   accent-color: var(--accent-primary);
 }
 
+.admin-dashboard .admin-modal-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 4px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--input-bg) 88%, var(--card-bg));
+  border: 1px solid var(--card-border);
+}
+
+.admin-dashboard .admin-modal-mode-tabs__btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-dashboard .admin-modal-mode-tabs__btn:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--card-bg) 70%, transparent);
+}
+
+.admin-dashboard .admin-modal-mode-tabs__btn.is-active {
+  color: var(--text-primary);
+  background: var(--card-bg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.admin-dashboard textarea.form-input.admin-bulk-student-lines {
+  resize: vertical;
+  min-height: 160px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .admin-dashboard .admin-modal-surface--user {
   max-width: 560px;
 }

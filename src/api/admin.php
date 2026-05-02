@@ -217,6 +217,159 @@ if ($method === 'GET' && $action === 'list') {
         default:
             http_response_code(400); echo json_encode(['success'=>false,'message'=>'Unknown entity']); break;
     }
+} elseif ($method === 'POST' && $action === 'bulk_import_students') {
+    $deptId = (int) ($input['department_id'] ?? 0);
+    $sharedPassword = (string) ($input['shared_password'] ?? '');
+    $raw = $input['students'] ?? $input['lines'] ?? null;
+    $maxRows = 500;
+
+    if ($deptId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Select an active department.']);
+        exit;
+    }
+    if (strlen($sharedPassword) < 8) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Shared password must be at least 8 characters.']);
+        exit;
+    }
+
+    if (is_string($raw)) {
+        $lines = preg_split('/\r\n|\r|\n/', $raw);
+    } elseif (is_array($raw)) {
+        $lines = $raw;
+    } else {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Provide student IDs (one per line) or a students array.']);
+        exit;
+    }
+
+    $parsed = [];
+    $seenLocal = [];
+
+    foreach ($lines as $lineNum => $line) {
+        $line = trim((string) $line);
+        if ($line === '') {
+            continue;
+        }
+        if (count($parsed) >= $maxRows) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Too many rows (max ' . $maxRows . ').']);
+            exit;
+        }
+
+        $cells = str_getcsv($line);
+        $username = trim((string) ($cells[0] ?? ''));
+        $fullName = isset($cells[1]) ? trim((string) $cells[1]) : '';
+        $email = isset($cells[2]) ? trim((string) $cells[2]) : '';
+
+        if ($username === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Line ' . ($lineNum + 1) . ': username is empty.']);
+            exit;
+        }
+        if (strlen($username) > 50) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Line ' . ($lineNum + 1) . ': username too long (max 50 characters).']);
+            exit;
+        }
+        // Username/student ID is login-only; display name must not default to the ID — use CSV for real names.
+        if ($fullName === '') {
+            $fullName = 'New student';
+        }
+        if (strlen($fullName) > 100) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Line ' . ($lineNum + 1) . ': full name too long (max 100 characters).']);
+            exit;
+        }
+        $emailFinal = ($email !== '') ? $email : null;
+        if ($emailFinal !== null && strlen($emailFinal) > 150) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Line ' . ($lineNum + 1) . ': email too long.']);
+            exit;
+        }
+
+        $dedupeKey = strtolower($username);
+        if (isset($seenLocal[$dedupeKey])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Duplicate username in list: ' . $username]);
+            exit;
+        }
+        $seenLocal[$dedupeKey] = true;
+
+        $parsed[] = ['username' => $username, 'full_name' => $fullName, 'email' => $emailFinal];
+    }
+
+    if ($parsed === []) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Add at least one student ID (one per line).']);
+        exit;
+    }
+
+    $dst = $db->prepare('SELECT id FROM departments WHERE id = ? AND status = ? LIMIT 1');
+    $dst->execute([$deptId, 'active']);
+    if (!$dst->fetch()) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Invalid or inactive department.']);
+        exit;
+    }
+
+    $usernames = array_column($parsed, 'username');
+    $placeholders = implode(',', array_fill(0, count($usernames), '?'));
+    $chkDup = $db->prepare('SELECT username FROM users WHERE username IN (' . $placeholders . ')');
+    $chkDup->execute($usernames);
+    $existing = $chkDup->fetchAll(PDO::FETCH_COLUMN);
+    if ($existing !== []) {
+        $sample = array_slice($existing, 0, 10);
+        http_response_code(409);
+        echo json_encode([
+            'success'  => false,
+            'message'  => 'Some usernames already exist: ' . implode(', ', $sample) . (count($existing) > 10 ? ' …' : ''),
+            'existing' => $existing,
+        ]);
+        exit;
+    }
+
+    $hash = password_hash($sharedPassword, PASSWORD_BCRYPT);
+    $ins = $db->prepare(
+        'INSERT INTO users (username, password_hash, full_name, email, role, department_id, must_change_password, status) VALUES (?,?,?,?,?,?,1,?)'
+    );
+
+    $db->beginTransaction();
+    try {
+        foreach ($parsed as $row) {
+            $ins->execute([
+                $row['username'],
+                $hash,
+                $row['full_name'],
+                $row['email'],
+                'student',
+                $deptId,
+                'active',
+            ]);
+        }
+        $db->commit();
+    } catch (Throwable $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        if ($e instanceof PDOException && ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate') !== false)) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'A username conflicted during import (remove duplicates or resolve conflicts).']);
+            exit;
+        }
+        throw $e;
+    }
+
+    $n = count($parsed);
+    AuthService::logAudit(
+        AuthService::getUserId(),
+        'bulk_students_imported',
+        'user',
+        null,
+        "Imported {$n} students (department_id {$deptId})"
+    );
+    echo json_encode(['success' => true, 'message' => 'Imported ' . $n . ' student(s).', 'count' => $n]);
 } else {
     http_response_code(400); echo json_encode(['success'=>false,'message'=>'Invalid request']);
 }

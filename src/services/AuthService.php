@@ -56,8 +56,9 @@ class AuthService {
 
         $db = Database::getConnection();
         $stmt = $db->prepare(
-            'SELECT id, username, password_hash, full_name, email, role, department_id, status 
-             FROM users 
+            'SELECT id, username, password_hash, full_name, email, role, department_id,
+                    COALESCE(must_change_password, 0) AS must_change_password, status
+             FROM users
              WHERE username = :username AND role = :role AND status = :status
              LIMIT 1'
         );
@@ -84,6 +85,8 @@ class AuthService {
 
         // Store user data in session (exclude password hash)
         unset($user['password_hash']);
+        $user['must_change_password'] = (int) ($user['must_change_password'] ?? 0) === 1;
+        unset($user['status']);
         $_SESSION['user'] = $user;
         $_SESSION['login_time'] = time();
         $_SESSION['ip'] = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -201,7 +204,7 @@ class AuthService {
      * Re-load the signed-in user from the database by session user id (must be active).
      * Updates $_SESSION['user'] so it matches the DB (no stale name/email). If missing or inactive, logs out.
      *
-     * @return array{id:int, username:string, full_name:string, email:string, role:string}|null
+     * @return array{id:int, username:string, full_name:string, email:string, role:string, must_change_password:bool}|null
      */
     public static function getSanitizedUserHydratedFromDb(): ?array {
         self::initSession();
@@ -213,7 +216,8 @@ class AuthService {
         try {
             $db = Database::getConnection();
             $stmt = $db->prepare(
-                'SELECT id, username, full_name, email, role, department_id, status
+                'SELECT id, username, full_name, email, role, department_id,
+                        COALESCE(must_change_password, 0) AS must_change_password, status
                  FROM users WHERE id = ? LIMIT 1'
             );
             $stmt->execute([(int) $sess['id']]);
@@ -232,15 +236,19 @@ class AuthService {
                     $fresh[$k] = $row[$k];
                 }
             }
+            if (array_key_exists('must_change_password', $row)) {
+                $fresh['must_change_password'] = (int) $row['must_change_password'] === 1;
+            }
             unset($fresh['password_hash']);
             $_SESSION['user'] = $fresh;
 
             return [
-                'id'          => (int) $fresh['id'],
-                'username'    => $fresh['username'],
-                'full_name'   => $fresh['full_name'],
-                'email'       => $fresh['email'] ?? '',
-                'role'        => $fresh['role'],
+                'id'                    => (int) $fresh['id'],
+                'username'              => $fresh['username'],
+                'full_name'             => $fresh['full_name'],
+                'email'                 => $fresh['email'] ?? '',
+                'role'                  => $fresh['role'],
+                'must_change_password'  => !empty($fresh['must_change_password']),
             ];
         } catch (\Throwable $e) {
             error_log('Session hydration failed: ' . $e->getMessage());
@@ -268,13 +276,18 @@ class AuthService {
 
         try {
             $db = Database::getConnection();
-            $stmt = $db->prepare('SELECT password_hash FROM users WHERE id = ? AND status = ? LIMIT 1');
+            $stmt = $db->prepare(
+                'SELECT password_hash, COALESCE(must_change_password, 0) AS must_change_password
+                 FROM users WHERE id = ? AND status = ? LIMIT 1'
+            );
             $stmt->execute([(int) $user['id'], 'active']);
             $row = $stmt->fetch();
 
             if (!$row) {
                 return ['success' => false, 'code' => 'auth', 'message' => 'Account not found or inactive.'];
             }
+
+            $hadMustChange = ((int) ($row['must_change_password'] ?? 0)) === 1;
 
             if (!password_verify($currentPassword, $row['password_hash'])) {
                 self::logAudit((int) $user['id'], 'password_change_failed', 'user', (int) $user['id'], 'Invalid current password');
@@ -287,10 +300,23 @@ class AuthService {
             }
 
             $hash = password_hash($newPassword, PASSWORD_BCRYPT);
-            $up = $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+            $up = $db->prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?');
             $up->execute([$hash, (int) $user['id']]);
 
             self::logAudit((int) $user['id'], 'password_changed', 'user', (int) $user['id'], null);
+
+            // Students completing first login after bulk import stay signed in; others sign out for safety.
+            if (($user['role'] ?? '') === 'student' && $hadMustChange) {
+                session_regenerate_id(true);
+                $_SESSION['user']['must_change_password'] = false;
+
+                return [
+                    'success'       => true,
+                    'sign_in_again' => false,
+                    'message'       => 'Your password has been updated. You can continue.',
+                ];
+            }
+
             self::logout();
 
             return [

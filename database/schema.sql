@@ -29,6 +29,7 @@ CREATE TABLE users (
     email VARCHAR(150) DEFAULT NULL,
     role ENUM('student', 'instructor', 'dean', 'hr', 'admin') NOT NULL,
     department_id INT DEFAULT NULL,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 0,
     status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
     last_login TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -1,7 +1,13 @@
 <?php
 require_once __DIR__ . '/../../../src/middleware/auth.php';
 requireAuth('student');
+
+AuthService::getSanitizedUserHydratedFromDb();
 $user = AuthService::getCurrentUser();
+if ($user && !empty($user['must_change_password'])) {
+    header('Location: first-login-password.php');
+    exit;
+}
 $assetBase = '../../assets';
 ?>
 <!doctype html>

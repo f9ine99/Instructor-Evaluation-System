@@ -278,6 +278,13 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
     <div class="admin-modal-surface admin-modal-surface--user">
         <h2 id="modalUserTitle">Add student</h2>
         <p class="admin-modal-lead" id="modalUserLead">Students belong to a department; you can enroll them in active courses in that department (enrollments).</p>
+
+        <div id="cuStudentModeTabs" class="admin-modal-mode-tabs" style="display:none;" role="tablist" aria-label="Student creation mode">
+            <button type="button" class="admin-modal-mode-tabs__btn is-active" role="tab" aria-selected="true" data-student-tab="single">One student</button>
+            <button type="button" class="admin-modal-mode-tabs__btn" role="tab" aria-selected="false" data-student-tab="bulk">Bulk upload</button>
+        </div>
+
+        <div id="cuStudentPanelSingle">
         <form id="formCreateUser">
             <input type="hidden" id="cuUserMode" value="student" autocomplete="off">
             <input type="hidden" id="cuRole" name="role" value="student">
@@ -334,6 +341,38 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                 </button>
             </div>
         </form>
+        </div>
+
+        <div id="cuStudentPanelBulk" style="display:none;">
+            <form id="formBulkImportStudents">
+                <p class="admin-field-hint" style="margin-top:0;">One student ID per line, or CSV: <code style="font-size:11px;">student_id,full name,email</code>. ID-only lines use the display name “New student” (change it later or include the name in CSV). Shared password; first login forces a new password.</p>
+                <div class="form-group">
+                    <label class="form-label" for="bulkDept">Department <span style="color:var(--error);">*</span></label>
+                    <select class="form-select" id="bulkDept" name="department_id" required>
+                        <option value="">Select…</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bulkLines">Student IDs <span style="color:var(--error);">*</span></label>
+                    <textarea class="form-input admin-bulk-student-lines" id="bulkLines" name="lines" rows="10" required placeholder="STU001&#10;STU002&#10;2024001,Ada Lovelace,ada@example.edu" spellcheck="false"></textarea>
+                    <p class="admin-field-hint">Up to 500 accounts per import. Usernames must be unique in the system.</p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="bulkSharedPassword">Shared password <span style="color:var(--error);">*</span></label>
+                    <input type="password" class="form-input" id="bulkSharedPassword" required minlength="8" autocomplete="new-password" placeholder="Temporary password for all (min. 8 characters)">
+                </div>
+                <div class="admin-modal-actions">
+                    <button type="button" class="btn btn--secondary" data-close-modal="modalUser">Cancel</button>
+                    <button type="submit" class="admin-create-user-submit" id="bulkSubmitBtn">
+                        <span class="admin-create-user-submit__spinner" aria-hidden="true"></span>
+                        <span class="admin-create-user-submit__leading" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        </span>
+                        <span class="admin-create-user-submit__text">Import students</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -417,6 +456,32 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
     var currentUserRoleFilter = '';
     var lookups = { departments: [], users: [], courses: [] };
     var userModalMode = 'student';
+    var studentBulkTab = 'single';
+
+    function setStudentBulkTab(tab) {
+        studentBulkTab = tab === 'bulk' ? 'bulk' : 'single';
+        var tabRoot = document.getElementById('cuStudentModeTabs');
+        var singlePanel = document.getElementById('cuStudentPanelSingle');
+        var bulkPanel = document.getElementById('cuStudentPanelBulk');
+        if (tabRoot) {
+            tabRoot.querySelectorAll('[data-student-tab]').forEach(function (btn) {
+                var on = btn.getAttribute('data-student-tab') === studentBulkTab;
+                btn.classList.toggle('is-active', on);
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+        if (singlePanel) singlePanel.style.display = studentBulkTab === 'single' ? 'block' : 'none';
+        if (bulkPanel) bulkPanel.style.display = studentBulkTab === 'bulk' ? 'block' : 'none';
+    }
+
+    var tabStrip = document.getElementById('cuStudentModeTabs');
+    if (tabStrip) {
+        tabStrip.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-student-tab]');
+            if (!btn) return;
+            setStudentBulkTab(btn.getAttribute('data-student-tab'));
+        });
+    }
 
     function escapeHtml(s) {
         if (s == null || s === '') return '';
@@ -736,6 +801,21 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         staffWrap.style.display = mode === 'staff' ? 'block' : 'none';
         enrollWrap.style.display = mode === 'student' ? 'block' : 'none';
 
+        var bulkTabs = document.getElementById('cuStudentModeTabs');
+        var bulkPanel = document.getElementById('cuStudentPanelBulk');
+        var singlePanel = document.getElementById('cuStudentPanelSingle');
+        if (mode === 'student') {
+            if (bulkTabs) bulkTabs.style.display = 'flex';
+            fillDepartmentOptions(document.getElementById('bulkDept'), false);
+            var bf = document.getElementById('formBulkImportStudents');
+            if (bf) bf.reset();
+            setStudentBulkTab('single');
+        } else {
+            if (bulkTabs) bulkTabs.style.display = 'none';
+            if (bulkPanel) bulkPanel.style.display = 'none';
+            if (singlePanel) singlePanel.style.display = 'block';
+        }
+
         if (mode === 'student') {
             roleHidden.value = 'student';
             title.textContent = 'Add student';
@@ -856,6 +936,46 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         }
         if (can) can.disabled = !!on;
     }
+
+    function setBulkImportSubmitting(on) {
+        var sub = document.getElementById('bulkSubmitBtn');
+        var bulkForm = document.getElementById('formBulkImportStudents');
+        var cancelBtns = bulkForm ? bulkForm.querySelectorAll('button[data-close-modal]') : [];
+        if (sub) {
+            sub.disabled = !!on;
+            sub.classList.toggle('is-loading', !!on);
+        }
+        cancelBtns.forEach(function (b) { b.disabled = !!on; });
+    }
+
+    document.getElementById('formBulkImportStudents').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var deptVal = document.getElementById('bulkDept').value;
+        var lines = document.getElementById('bulkLines').value;
+        var pw = document.getElementById('bulkSharedPassword').value;
+        if (!deptVal || !lines.trim() || pw.length < 8) {
+            showToast('Department, at least one student line, and a password (8+ characters) are required.', 'error');
+            return;
+        }
+        setBulkImportSubmitting(true);
+        try {
+            await postAdmin({
+                action: 'bulk_import_students',
+                department_id: parseInt(deptVal, 10),
+                shared_password: pw,
+                students: lines
+            });
+            showToast('Students imported.', 'success');
+            setModalOpen('modalUser', false);
+            e.target.reset();
+            await loadLookups();
+            loadDashboard();
+        } catch (err) {
+            showToast(err.message || 'Import failed.', 'error');
+        } finally {
+            setBulkImportSubmitting(false);
+        }
+    });
 
     document.getElementById('formCreateUser').addEventListener('submit', async function (e) {
         e.preventDefault();

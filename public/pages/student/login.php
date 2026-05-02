@@ -2,9 +2,12 @@
 require_once __DIR__ . '/../../../src/services/AuthService.php';
 AuthService::initSession();
 
-// Redirect if already logged in
+// Redirect if already logged in (bulk-import students must set a new password first)
 if (AuthService::isLoggedIn() && AuthService::hasRole('student')) {
-    header('Location: evaluate.php'); exit;
+    $u = AuthService::getCurrentUser();
+    $next = (!empty($u['must_change_password'])) ? 'first-login-password.php' : 'evaluate.php';
+    header('Location: ' . $next);
+    exit;
 }
 $assetBase = '../../assets';
 ?>

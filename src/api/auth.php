@@ -54,16 +54,23 @@ try {
             $user = AuthService::login($username, $password, $role);
 
             if ($user) {
+                $mustChange = !empty($user['must_change_password']);
+                $redirect = getRedirectUrl($role);
+                if ($role === 'student' && $mustChange) {
+                    $redirect = '/pages/student/first-login-password.php';
+                }
                 echo json_encode([
-                    'success'  => true,
-                    'message'  => 'Login successful.',
-                    'user'     => [
-                        'id'        => $user['id'],
-                        'username'  => $user['username'],
-                        'full_name' => $user['full_name'],
-                        'role'      => $user['role'],
+                    'success'               => true,
+                    'message'               => 'Login successful.',
+                    'user'                  => [
+                        'id'                     => $user['id'],
+                        'username'               => $user['username'],
+                        'full_name'              => $user['full_name'],
+                        'role'                   => $user['role'],
+                        'must_change_password'   => $mustChange,
                     ],
-                    'redirect' => getRedirectUrl($role),
+                    'redirect'              => $redirect,
+                    'must_change_password'    => $mustChange,
                 ]);
             } else {
                 http_response_code(401);
