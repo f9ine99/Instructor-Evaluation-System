@@ -6,6 +6,17 @@ $ab = '../../assets';
 $currentUserId = (int) ($user['id'] ?? 0);
 $fn = trim((string) ($user['full_name'] ?? ''));
 $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
+
+$roleLabels = [
+    'admin' => 'Administrator',
+    'hr' => 'HR',
+    'dean' => 'Dean',
+    'instructor' => 'Instructor',
+    'student' => 'Student',
+];
+$rKey = (string) ($user['role'] ?? '');
+$settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !== '' ? ucfirst($rKey) : '—');
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -21,19 +32,29 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
     <link rel="stylesheet" href="<?= htmlspecialchars($ab) ?>/css/dashboards.css">
 </head>
 <body class="admin-dashboard">
-<div class="admin-layout">
-    <aside class="sidebar" aria-label="Admin navigation">
+<div class="admin-layout" id="dashboardLayout">
+    <aside class="sidebar" id="dashboardSidebar" aria-label="Admin navigation">
         <div class="sidebar-header">
-            <div class="sidebar-logo">HOPE</div>
+            <div class="sidebar-logo" title="HOPE">HOPE</div>
+            <button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-expanded="true" aria-controls="dashboardSidebar" title="Collapse sidebar">
+                <svg class="sidebar-collapse-btn__icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+            </button>
         </div>
         <nav class="nav-links">
-            <button type="button" class="nav-item active" data-section="overview" aria-current="page">
+            <button type="button" class="nav-item active" data-section="overview" aria-current="page" title="Overview">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                 <span>Overview</span>
             </button>
-            <button type="button" class="nav-item" data-section="manage">
+            <button type="button" class="nav-item" data-section="manage" title="Manage Data">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 <span>Manage Data</span>
+            </button>
+            <button type="button" class="nav-item" data-section="settings" title="Settings">
+                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span>Settings</span>
             </button>
         </nav>
         <div class="sidebar-footer">
@@ -57,51 +78,196 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
             </div>
         </div>
 
-        <section id="overview" class="section-content active" aria-labelledby="pageTitle">
-            <div class="stats-grid" id="statsGrid">
-                <p style="color:var(--text-secondary);">Loading…</p>
+        <section id="overview" class="section-content active admin-overview" aria-labelledby="adminOverviewHeading">
+            <div class="admin-overview-inner">
+                <header class="admin-overview-hero">
+                    <div class="admin-overview-hero__badge" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="admin-overview-hero__title" id="adminOverviewHeading">System overview</h2>
+                        <p class="admin-overview-hero__lead">Whole-institution counts: people, organizational units, evaluations, and response quality.</p>
+                    </div>
+                </header>
+
+                <div id="statsGrid" class="admin-overview-mount" aria-live="polite">
+                    <p class="admin-overview-loading">Loading overview…</p>
+                </div>
             </div>
         </section>
 
-        <section id="manage" class="section-content" aria-hidden="true">
-            <div class="section-toolbar">
-                <h2 class="section-heading">Directory</h2>
-                <div class="admin-toolbar-actions">
-                    <button type="button" class="admin-add-student-cta" id="btnAddStudent" style="display:none;" aria-label="Add a student">
-                        <span class="admin-add-student-cta__icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
-                        </span>
-                        <span class="admin-add-student-cta__label">
-                            <span class="admin-add-student-cta__title">Add student</span>
-                            <span class="admin-add-student-cta__hint">Dept + optional enrollments</span>
-                        </span>
-                    </button>
-                    <button type="button" class="admin-add-instructor-cta" id="btnAddInstructor" style="display:none;" aria-label="Add an instructor">
-                        <span class="admin-add-instructor-cta__icon" aria-hidden="true">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                        </span>
-                        <span class="admin-add-instructor-cta__label">
-                            <span class="admin-add-instructor-cta__title">Add instructor</span>
-                            <span class="admin-add-instructor-cta__hint">Faculty &amp; department</span>
-                        </span>
-                    </button>
-                    <button type="button" class="admin-add-staff-link" id="btnAddStaff" style="display:none;">Add staff (dean / HR / admin)</button>
-                    <button type="button" class="btn-submit" id="btnAddCourse" style="display:none;">+ Add course</button>
-                    <button type="button" class="btn-submit" id="btnAddDepartment" style="display:none;">+ Add department</button>
+        <section id="manage" class="section-content admin-manage" aria-hidden="true" aria-labelledby="adminManageHeading">
+            <div class="admin-manage-inner">
+                <header class="admin-manage-intro">
+                    <div class="admin-manage-intro__badge" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <div>
+                        <h2 class="admin-manage-title" id="adminManageHeading">Manage data</h2>
+                        <p class="admin-manage-lead">Directory of users, courses, and departments. Deactivating an item hides it from new activity while keeping audit history.</p>
+                    </div>
+                </header>
+
+                <div class="admin-manage-controls">
+                    <div class="admin-manage-controls__primary">
+                        <nav class="admin-manage-segment" role="tablist" aria-label="Dataset">
+                            <button type="button" class="tab-btn admin-manage-segment__btn active" data-tab="users" role="tab" aria-selected="true">Users</button>
+                            <button type="button" class="tab-btn admin-manage-segment__btn" data-tab="courses" role="tab" aria-selected="false">Courses</button>
+                            <button type="button" class="tab-btn admin-manage-segment__btn" data-tab="departments" role="tab" aria-selected="false">Departments</button>
+                        </nav>
+                        <p class="admin-manage-hint" id="manageDatasetHint">Use role filters below to load one role at a time.</p>
+                    </div>
+                    <div class="admin-toolbar-actions admin-manage-controls__actions">
+                        <button type="button" class="admin-add-student-cta" id="btnAddStudent" style="display:none;" aria-label="Add a student">
+                            <span class="admin-add-student-cta__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/></svg>
+                            </span>
+                            <span class="admin-add-student-cta__label">
+                                <span class="admin-add-student-cta__title">Add student</span>
+                                <span class="admin-add-student-cta__hint">Dept + optional enrollments</span>
+                            </span>
+                        </button>
+                        <button type="button" class="admin-add-instructor-cta" id="btnAddInstructor" style="display:none;" aria-label="Add an instructor">
+                            <span class="admin-add-instructor-cta__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                            </span>
+                            <span class="admin-add-instructor-cta__label">
+                                <span class="admin-add-instructor-cta__title">Add instructor</span>
+                                <span class="admin-add-instructor-cta__hint">Faculty &amp; department</span>
+                            </span>
+                        </button>
+                        <button type="button" class="admin-add-staff-link" id="btnAddStaff" style="display:none;">Add staff (dean / HR / admin)</button>
+                        <button type="button" class="admin-manage-course-btn" id="btnAddCourse" style="display:none;">
+                            <span class="admin-manage-course-btn__icon" aria-hidden="true">+</span>
+                            Add course
+                        </button>
+                        <button type="button" class="admin-add-staff-link" id="btnAddDepartment" style="display:none;" title="Create a department">+ Add department</button>
+                    </div>
+                </div>
+
+                <div class="admin-data-panel">
+                    <div class="admin-data-panel__toolbar">
+                        <div class="admin-data-panel__titles">
+                            <span class="admin-data-panel__kicker">Current view</span>
+                            <h3 class="admin-data-panel__name" id="managePanelTitle">Users</h3>
+                        </div>
+                        <span class="admin-data-panel__count" id="managePanelCount" aria-live="polite"></span>
+                    </div>
+                    <div class="admin-user-role-bar" id="adminUserRoleBar" hidden>
+                        <span class="admin-user-role-bar__label" id="adminUserRoleBarLabel">Filter by role</span>
+                        <div class="admin-user-role-bar__chips" role="group" aria-label="Filter users by role">
+                            <button type="button" class="admin-role-filter active" data-user-role="" aria-pressed="true">All</button>
+                            <button type="button" class="admin-role-filter" data-user-role="student" aria-pressed="false">Students</button>
+                            <button type="button" class="admin-role-filter" data-user-role="instructor" aria-pressed="false">Instructors</button>
+                            <button type="button" class="admin-role-filter" data-user-role="dean" aria-pressed="false">Deans</button>
+                            <button type="button" class="admin-role-filter" data-user-role="hr" aria-pressed="false">HR</button>
+                            <button type="button" class="admin-role-filter" data-user-role="admin" aria-pressed="false">Admins</button>
+                        </div>
+                    </div>
+                    <div class="admin-data-panel__table-wrap">
+                        <table class="data-table admin-manage-table">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody">
+                                <tr><td colspan="7" class="admin-manage-loading">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <div class="tab-group" style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-                <button type="button" class="tab-btn active" data-tab="users">Users</button>
-                <button type="button" class="tab-btn" data-tab="courses">Courses</button>
-                <button type="button" class="tab-btn" data-tab="departments">Departments</button>
-            </div>
-            <div class="data-table-container">
-                <table class="data-table">
-                    <thead id="tableHead"></thead>
-                    <tbody id="tableBody">
-                        <tr><td colspan="7" style="text-align:center;">Loading…</td></tr>
-                    </tbody>
-                </table>
+        </section>
+
+        <section id="settings" class="section-content admin-settings" aria-hidden="true" aria-labelledby="adminSettingsHeading">
+            <div class="admin-settings-shell">
+                <header class="admin-settings-hero">
+                    <div class="admin-settings-hero__badge" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="admin-settings-hero__title" id="adminSettingsHeading">Settings</h2>
+                        <p class="admin-settings-hero__lead">Administrator profile, live session check, and password updates for this browser session.</p>
+                    </div>
+                </header>
+
+                <div class="admin-settings-grid">
+                    <article class="admin-settings-panel admin-settings-panel--profile">
+                        <div class="admin-settings-panel__head">
+                            <span class="admin-settings-panel__icon" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.85"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-settings-panel__title">Account &amp; session</h3>
+                                <p class="admin-settings-panel__subtitle">Details from your sign-in and a live check against the server.</p>
+                            </div>
+                        </div>
+                        <div class="admin-settings-session-row">
+                            <span class="admin-settings-session-label">Server check</span>
+                            <p class="admin-settings-session" id="adminSessionStatus" role="status">Open this section to verify your session.</p>
+                        </div>
+                        <dl class="admin-settings-kv">
+                            <div class="admin-settings-kv__row">
+                                <dt>Name</dt>
+                                <dd id="adminSettingsKvFullName"><?= htmlspecialchars($user['full_name'] ?? '') ?></dd>
+                            </div>
+                            <div class="admin-settings-kv__row">
+                                <dt>Username</dt>
+                                <dd><span class="admin-settings-kv__mono" id="adminSettingsKvUsername"><?= htmlspecialchars($user['username'] ?? '') ?></span></dd>
+                            </div>
+                            <div class="admin-settings-kv__row">
+                                <dt>Email</dt>
+                                <dd id="adminSettingsKvEmail"><?= !empty($user['email']) ? htmlspecialchars((string) $user['email']) : '—' ?></dd>
+                            </div>
+                            <div class="admin-settings-kv__row">
+                                <dt>Role</dt>
+                                <dd><span class="admin-settings-chip" id="adminSettingsKvRole"><?= htmlspecialchars($settingsRoleLabel) ?></span></dd>
+                            </div>
+                            <div class="admin-settings-kv__row admin-settings-kv__row--meta">
+                                <dt>User ID</dt>
+                                <dd id="adminSettingsKvUserId"><?= htmlspecialchars((string) ($user['id'] ?? '')) ?></dd>
+                            </div>
+                        </dl>
+                    </article>
+
+                    <article class="admin-settings-panel admin-settings-panel--security">
+                        <div class="admin-settings-panel__head">
+                            <span class="admin-settings-panel__icon admin-settings-panel__icon--lock" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.85"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                            </span>
+                            <div>
+                                <h3 class="admin-settings-panel__title">Password</h3>
+                                <p class="admin-settings-panel__subtitle">Use a strong passphrase. You will need your current password to continue.</p>
+                            </div>
+                        </div>
+                        <aside class="admin-settings-notice" role="note">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <p>After you update your password, <strong>this session ends</strong>. You’ll be returned to sign-in — use your <strong>new</strong> password there.</p>
+                        </aside>
+                        <form id="formChangePassword" class="admin-settings-form" autocomplete="off">
+                            <div class="form-group">
+                                <label class="form-label" for="cpCurrent">Current password</label>
+                                <input type="password" class="form-input admin-settings-input" id="cpCurrent" name="current_password" required autocomplete="current-password" maxlength="128" placeholder="Your existing password">
+                            </div>
+                            <div class="form-group admin-settings-password-pair">
+                                <div class="admin-settings-password-field">
+                                    <label class="form-label" for="cpNew">New password</label>
+                                    <input type="password" class="form-input admin-settings-input" id="cpNew" name="new_password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Minimum 8 characters">
+                                </div>
+                                <div class="admin-settings-password-field">
+                                    <label class="form-label" for="cpConfirm">Confirm</label>
+                                    <input type="password" class="form-input admin-settings-input" id="cpConfirm" name="new_password_confirm" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Repeat new password">
+                                </div>
+                            </div>
+                            <p class="admin-settings-form-msg" id="cpFormMsg" role="alert" aria-live="polite" hidden></p>
+                            <div class="admin-settings-form-actions">
+                                <button type="submit" class="btn-submit admin-settings-submit" id="cpSubmit">
+                                    Update password &amp; sign out
+                                </button>
+                            </div>
+                        </form>
+                    </article>
+                </div>
             </div>
         </section>
     </main>
@@ -228,10 +394,11 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
 <div id="modalDepartment" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalDeptTitle" aria-hidden="true">
     <div class="admin-modal-surface">
         <h2 id="modalDeptTitle">Add department</h2>
+        <p class="admin-modal-lead">Departments are created here first. You then assign them when adding students, instructors, deans, and courses.</p>
         <form id="formCreateDepartment">
             <div class="form-group">
-                <label class="form-label" for="cdName">Name <span style="color:var(--error);">*</span></label>
-                <input class="form-input" id="cdName" name="name" required maxlength="100">
+                <label class="form-label" for="cdName">Department name <span style="color:var(--error);">*</span></label>
+                <input class="form-input" id="cdName" name="name" required maxlength="100" placeholder="e.g. Computer Science" autocomplete="organization">
             </div>
             <div class="admin-modal-actions">
                 <button type="button" class="btn btn--secondary" data-close-modal="modalDepartment">Cancel</button>
@@ -247,6 +414,7 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
 (function () {
     var currentUserId = <?= $currentUserId ?>;
     var currentTab = 'users';
+    var currentUserRoleFilter = '';
     var lookups = { departments: [], users: [], courses: [] };
     var userModalMode = 'student';
 
@@ -287,6 +455,95 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
     loadTheme();
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
+    var SETTINGS_ROLE_LABELS = {
+        admin: 'Administrator',
+        hr: 'HR',
+        dean: 'Dean',
+        instructor: 'Instructor',
+        student: 'Student'
+    };
+
+    function applyAdminSettingsProfileFromLiveSession(u) {
+        if (!u) return;
+        var fn = document.getElementById('adminSettingsKvFullName');
+        if (fn) fn.textContent = u.full_name || '';
+        var uns = document.getElementById('adminSettingsKvUsername');
+        if (uns) uns.textContent = u.username || '';
+        var em = document.getElementById('adminSettingsKvEmail');
+        if (em) em.textContent = u.email && String(u.email).trim() !== '' ? String(u.email) : '—';
+        var uid = document.getElementById('adminSettingsKvUserId');
+        if (uid && u.id != null) uid.textContent = String(u.id);
+        var rl = document.getElementById('adminSettingsKvRole');
+        var r = u.role ? String(u.role) : '';
+        if (rl) rl.textContent = SETTINGS_ROLE_LABELS[r] || (r !== '' ? r.charAt(0).toUpperCase() + r.slice(1) : '—');
+    }
+
+    function refreshAdminSessionStatus() {
+        var el = document.getElementById('adminSessionStatus');
+        if (!el) return;
+        el.textContent = 'Checking session…';
+        el.className = 'admin-settings-session admin-settings-session--pending';
+        fetch('/api/auth.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ action: 'session_check' })
+        })
+            .then(function (r) {
+                return r.json().then(function (d) {
+                    return { r: r, d: d };
+                });
+            })
+            .then(function (x) {
+                if (!x.r.ok || !x.d.success || !x.d.user) {
+                    el.className = 'admin-settings-session admin-settings-session--bad';
+                    el.innerHTML =
+                        'Session invalid or expired. <a href="login.php" class="admin-settings-link">Sign in again</a>.';
+                    return;
+                }
+                var u = x.d.user;
+                applyAdminSettingsProfileFromLiveSession(u);
+                el.className = 'admin-settings-session admin-settings-session--ok';
+                el.textContent =
+                    'Session active — profile reloaded from the database for user #' +
+                    String(u.id) +
+                    ' (' +
+                    String(u.username) +
+                    ').';
+            })
+            .catch(function () {
+                el.className = 'admin-settings-session admin-settings-session--bad';
+                el.textContent = 'Could not verify session (network error).';
+            });
+    }
+
+    function updateManageDatasetTitleAndRoleBar() {
+        var pt = document.getElementById('managePanelTitle');
+        var bar = document.getElementById('adminUserRoleBar');
+        if (bar) bar.hidden = currentTab !== 'users';
+        if (!pt) return;
+        if (currentTab !== 'users') {
+            var panelTitles = { users: 'Users', courses: 'Courses', departments: 'Departments' };
+            pt.textContent = panelTitles[currentTab] || currentTab;
+            return;
+        }
+        var byRole = {
+            '': 'Users',
+            student: 'Students',
+            instructor: 'Instructors',
+            dean: 'Deans',
+            hr: 'HR staff',
+            admin: 'Administrators'
+        };
+        pt.textContent = byRole[currentUserRoleFilter] || 'Users';
+        document.querySelectorAll('.admin-role-filter').forEach(function (b) {
+            var role = b.getAttribute('data-user-role') || '';
+            var on = role === currentUserRoleFilter;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+    }
+
     function switchSection(id) {
         document.querySelectorAll('.nav-item[data-section]').forEach(function (btn) {
             var on = btn.getAttribute('data-section') === id;
@@ -299,8 +556,21 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
             s.classList.toggle('active', on);
             s.setAttribute('aria-hidden', on ? 'false' : 'true');
         });
-        var titles = { overview: 'System Overview', manage: 'Manage Data' };
+        var titles = { overview: 'System Overview', manage: 'Manage Data', settings: 'Settings' };
         document.getElementById('pageTitle').textContent = titles[id] || 'Admin';
+        if (id === 'manage') {
+            var mh = document.getElementById('manageDatasetHint');
+            if (mh && currentTab === 'users') {
+                mh.textContent = currentUserRoleFilter
+                    ? ('Listing only ' + (currentUserRoleFilter === 'hr' ? 'HR' : currentUserRoleFilter) + ' accounts.')
+                    : 'Use role filters below to load one role at a time.';
+            }
+            updateManageDatasetTitleAndRoleBar();
+            refreshManageTableIfNeeded();
+        }
+        if (id === 'settings') {
+            refreshAdminSessionStatus();
+        }
     }
 
     document.querySelectorAll('.nav-item[data-section]').forEach(function (btn) {
@@ -308,6 +578,18 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
             switchSection(btn.getAttribute('data-section'));
         });
     });
+
+    function manageSectionIsActive() {
+        var sec = document.getElementById('manage');
+        return !!(sec && sec.classList.contains('active'));
+    }
+
+    /** Only hits /api/admin list when Manage Data is visible — avoids redundant work on Overview load. */
+    function refreshManageTableIfNeeded() {
+        if (manageSectionIsActive()) {
+            loadTable();
+        }
+    }
 
     function updateAddButtons() {
         var onUsers = currentTab === 'users';
@@ -320,17 +602,53 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
         if (ins) ins.style.display = show;
         if (sf) sf.style.display = showStaff;
         document.getElementById('btnAddCourse').style.display = currentTab === 'courses' ? 'inline-flex' : 'none';
-        document.getElementById('btnAddDepartment').style.display = currentTab === 'departments' ? 'inline-flex' : 'none';
+        document.getElementById('btnAddDepartment').style.display =
+            currentTab === 'departments' || currentTab === 'courses' ? 'inline-block' : 'none';
     }
 
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(function (b) {
-            b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+            var on = b.getAttribute('data-tab') === tab;
+            b.classList.toggle('active', on);
+            if (b.classList.contains('admin-manage-segment__btn')) {
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            }
         });
+        var datasetHints = {
+            courses: 'Courses are tied to a department and primary instructor.',
+            departments: 'Organizational units used when assigning users and catalog courses.'
+        };
+        var mh = document.getElementById('manageDatasetHint');
+        if (mh) {
+            if (tab === 'users') {
+                mh.textContent = currentUserRoleFilter
+                    ? ('Listing only ' + (currentUserRoleFilter === 'hr' ? 'HR' : currentUserRoleFilter) + ' accounts. Switch filters or choose All.')
+                    : 'Use role filters below to load one role at a time.';
+            } else {
+                mh.textContent = datasetHints[tab] || '';
+            }
+        }
+        var pc = document.getElementById('managePanelCount');
+        if (pc) pc.textContent = '';
+        updateManageDatasetTitleAndRoleBar();
         updateAddButtons();
-        loadTable();
+        refreshManageTableIfNeeded();
     }
+
+    document.querySelectorAll('.admin-role-filter').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            currentUserRoleFilter = btn.getAttribute('data-user-role') || '';
+            updateManageDatasetTitleAndRoleBar();
+            var mh = document.getElementById('manageDatasetHint');
+            if (mh && currentTab === 'users') {
+                mh.textContent = currentUserRoleFilter
+                    ? ('Listing only ' + (currentUserRoleFilter === 'hr' ? 'HR' : currentUserRoleFilter) + ' accounts.')
+                    : 'Use role filters below to load one role at a time.';
+            }
+            refreshManageTableIfNeeded();
+        });
+    });
 
     document.querySelectorAll('.tab-btn').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -634,76 +952,205 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
     function loadDashboard() {
         var statsEl = document.getElementById('statsGrid');
         function errStats(msg) {
-            statsEl.innerHTML = '<p style="color:var(--error);padding:12px;">' + escapeHtml(msg) + '</p>';
+            statsEl.innerHTML =
+                '<div class="admin-overview-error" role="alert">' + escapeHtml(msg) + '</div>';
+        }
+        function ovTile(iconSvg, title, value, caption, modifier) {
+            var mod = modifier ? ' admin-overview-tile--' + modifier : '';
+            return (
+                '<article class="admin-overview-tile' +
+                mod +
+                '">' +
+                '<div class="admin-overview-tile__top">' +
+                '<span class="admin-overview-tile__icon" aria-hidden="true">' +
+                iconSvg +
+                '</span>' +
+                '<div class="admin-overview-tile__body">' +
+                '<h3 class="admin-overview-tile__title">' +
+                escapeHtml(title) +
+                '</h3>' +
+                '<p class="admin-overview-tile__value">' +
+                escapeHtml(String(value)) +
+                '</p>' +
+                '</div></div>' +
+                (caption
+                    ? '<p class="admin-overview-tile__caption">' + escapeHtml(caption) + '</p>'
+                    : '') +
+                '</article>'
+            );
         }
         fetch('/api/analytics.php?action=system_stats', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
-            .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
+            .then(function (r) {
+                return r.json().then(function (d) {
+                    return { r: r, d: d };
+                });
+            })
             .then(function (x) {
-                if (x.r.status === 401) { errStats('Session expired. Sign in again.'); loadTable(); return; }
-                if (!x.r.ok || !x.d.success) { errStats(x.d.message || ('HTTP ' + x.r.status)); loadTable(); return; }
-                var s = x.d.stats;
+                if (x.r.status === 401) {
+                    errStats('Session expired. Sign in again.');
+                    return;
+                }
+                if (!x.r.ok || !x.d.success) {
+                    errStats(x.d.message || 'HTTP ' + x.r.status);
+                    refreshManageTableIfNeeded();
+                    return;
+                }
+                var s = x.d.stats || {};
+                var usersActive =
+                    typeof s.total_users_active === 'number'
+                        ? s.total_users_active
+                        : (s.total_students || 0) + (s.total_instructors || 0) + (s.total_staff || 0);
+                var svg = function (paths) {
+                    return (
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.85" aria-hidden="true">' +
+                        paths +
+                        '</svg>'
+                    );
+                };
+                var icUsers = svg(
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>'
+                );
+                var icBuilding = svg(
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>'
+                );
+                var icBook = svg(
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>'
+                );
+                var icInbox = svg(
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-7 7m7-7H3m17 0H3"/>'
+                );
+                var icStar = svg(
+                    '<path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>'
+                );
+                var studs = s.total_students || 0;
+                var instr = s.total_instructors || 0;
+                var staff = s.total_staff || 0;
+                var dept = s.total_departments || 0;
+                var courses = s.total_courses_active || 0;
+                var sheets = s.total_evaluations || 0;
+                var openEv = s.open_evaluations || 0;
+                var pendingRv = s.pending_reviews || 0;
+                var subs = s.total_submissions || 0;
+                var avgScore = s.system_avg_score != null ? Number(s.system_avg_score) : 0;
+                var avgStr =
+                    avgScore > 0
+                        ? avgScore.toFixed(2)
+                        : (subs > 0 ? '—' : '0');
+
                 statsEl.innerHTML =
-                    '<div class="stat-card"><div class="stat-info"><h3>Total Users</h3><div class="value">' + (s.total_instructors + s.total_students) + '</div></div></div>' +
-                    '<div class="stat-card"><div class="stat-info"><h3>Total Departments</h3><div class="value">' + s.total_departments + '</div></div></div>' +
-                    '<div class="stat-card"><div class="stat-info"><h3>Active Evaluations</h3><div class="value">' + s.open_evaluations + '</div></div></div>' +
-                    '<div class="stat-card"><div class="stat-info"><h3>Total Submissions</h3><div class="value">' + s.total_submissions + '</div></div></div>';
-                loadTable();
+                    '<div class="admin-overview-grid">' +
+                    ovTile(icUsers, 'Active accounts', usersActive, studs + ' students · ' + instr + ' instructors · ' + staff + ' staff', 'users') +
+                    ovTile(icBuilding, 'Departments', dept, 'Active organizational units', 'orgs') +
+                    ovTile(icBook, 'Courses in catalog', courses, 'Active courses available for evaluations', '') +
+                    '</div>' +
+                    '<div class="admin-overview-subgrid">' +
+                    '<div class="admin-overview-strip">' +
+                    '<h4 class="admin-overview-strip__title">Evaluation pipeline</h4>' +
+                    '<ul class="admin-overview-strip__list">' +
+                    '<li><span class="admin-overview-strip__k">Collecting responses</span> <strong>' +
+                    openEv +
+                    '</strong> open</li>' +
+                    '<li><span class="admin-overview-strip__k">Closed — ready for review</span> <strong>' +
+                    pendingRv +
+                    '</strong></li>' +
+                    '<li><span class="admin-overview-strip__k">Evaluation sheets total</span> <strong>' +
+                    sheets +
+                    '</strong></li>' +
+                    '</ul></div>' +
+                    '<div class="admin-overview-strip admin-overview-strip--accent">' +
+                    '<h4 class="admin-overview-strip__title">Response quality</h4>' +
+                    '<div class="admin-overview-mini">' +
+                    ovTile(icStar, 'System avg. rating', avgStr, 'Across rubric responses' + (subs <= 0 ? ' (no data yet).' : '.'), '') +
+                    '</div>' +
+                    '<div class="admin-overview-mini admin-overview-mini--tight">' +
+                    ovTile(icInbox, 'Student submissions', subs, 'Completed evaluation submissions', '') +
+                    '</div>' +
+                    '</div></div>';
+
+                refreshManageTableIfNeeded();
             })
             .catch(function () {
                 errStats('Could not load dashboard.');
-                loadTable();
+                refreshManageTableIfNeeded();
             });
     }
 
     function tableColspan() {
-        return currentTab === 'courses' ? 7 : 6;
+        if (currentTab === 'courses') return 7;
+        if (currentTab === 'departments') return 6;
+        if (currentTab === 'users' && currentUserRoleFilter) return 5;
+        return 6;
     }
 
     function loadTable() {
         var body = document.getElementById('tableBody');
         var head = document.getElementById('tableHead');
         var cs = tableColspan();
-        fetch('/api/admin.php?action=list&entity=' + encodeURIComponent(currentTab), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+        var url = '/api/admin.php?action=list&entity=' + encodeURIComponent(currentTab);
+        if (currentTab === 'users' && currentUserRoleFilter) {
+            url += '&role=' + encodeURIComponent(currentUserRoleFilter);
+        }
+        fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
             .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
             .then(function (x) {
                 if (x.r.status === 401) {
-                    body.innerHTML = '<tr><td colspan="' + cs + '" style="text-align:center;color:var(--error);">Session expired</td></tr>';
+                    body.innerHTML = '<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--error">Session expired — sign in again.</td></tr>';
+                    document.getElementById('managePanelCount').textContent = '';
                     return;
                 }
                 if (!x.r.ok || !x.d.success) {
-                    body.innerHTML = '<tr><td colspan="' + cs + '" style="text-align:center;color:var(--error);">' + escapeHtml(x.d.message || ('HTTP ' + x.r.status)) + '</td></tr>';
+                    body.innerHTML = '<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--error">' + escapeHtml(x.d.message || ('HTTP ' + x.r.status)) + '</td></tr>';
+                    document.getElementById('managePanelCount').textContent = '';
                     return;
                 }
                 var data = Array.isArray(x.d.data) ? x.d.data : [];
+                var cnt = document.getElementById('managePanelCount');
+                if (cnt) cnt.textContent = data.length === 0 ? 'No records' : (data.length === 1 ? '1 record' : data.length + ' records');
 
                 if (currentTab === 'users') {
-                    head.innerHTML = '<tr><th>ID</th><th>Username</th><th>Full name</th><th>Role</th><th>Status</th><th>Actions</th></tr>';
+                    var showRoleCol = !currentUserRoleFilter;
+                    var thead = '<tr><th scope="col">ID</th><th scope="col">Username</th><th scope="col">Full name</th>';
+                    if (showRoleCol) thead += '<th scope="col">Role</th>';
+                    thead += '<th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
+                    head.innerHTML = thead;
+                    var emptyLbl = !currentUserRoleFilter
+                        ? 'No users in the directory.'
+                        : ({
+                            student: 'No students match this filter.',
+                            instructor: 'No instructors yet.',
+                            dean: 'No deans.',
+                            hr: 'No HR accounts.',
+                            admin: 'No other administrators.'
+                        }[currentUserRoleFilter] || 'No accounts for this role.');
                     body.innerHTML = data.map(function (u) {
                         var active = u.status === 'active';
                         var canDeact = active && parseInt(u.id, 10) !== currentUserId;
                         var btn = canDeact
                             ? '<button type="button" class="table-action-btn" data-act="deactivate" data-entity="user" data-id="' + u.id + '">Deactivate</button>'
                             : '<button type="button" class="table-action-btn" disabled title="' + (!active ? 'Already inactive' : 'Cannot deactivate your own account') + '">—</button>';
-                        return '<tr><td>' + u.id + '</td><td>' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.full_name) + '</td><td><span class="status-badge">' + escapeHtml(u.role) + '</span></td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(u.status) + '</span></td><td>' + btn + '</td></tr>';
-                    }).join('') || '<tr><td colspan="6">No rows</td></tr>';
+                        var row = '<tr><td class="admin-manage-mono">' + u.id + '</td><td class="admin-manage-strong">' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.full_name) + '</td>';
+                        if (showRoleCol) row += '<td><span class="admin-chip admin-chip--role">' + escapeHtml(u.role) + '</span></td>';
+                        row += '<td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(u.status) + '</span></td><td class="admin-manage-table__actions">' + btn + '</td></tr>';
+                        return row;
+                    }).join('') || ('<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--empty">' + escapeHtml(emptyLbl) + '</td></tr>');
                 } else if (currentTab === 'courses') {
-                    head.innerHTML = '<tr><th>Code</th><th>Title</th><th>Department</th><th>Instructor</th><th>Term</th><th>Status</th><th>Actions</th></tr>';
+                    head.innerHTML = '<tr><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Department</th><th scope="col">Instructor</th><th scope="col">Term</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
                     body.innerHTML = data.map(function (c) {
                         var active = c.status === 'active';
                         var btn = active
                             ? '<button type="button" class="table-action-btn" data-act="deactivate" data-entity="course" data-id="' + c.id + '">Deactivate</button>'
                             : '<button type="button" class="table-action-btn" disabled>—</button>';
-                        return '<tr><td>' + escapeHtml(c.code) + '</td><td>' + escapeHtml(c.title) + '</td><td>' + escapeHtml(c.department_name) + '</td><td>' + escapeHtml(c.instructor_name) + '</td><td>' + escapeHtml(c.semester + ' ' + c.academic_year) + '</td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(c.status) + '</span></td><td>' + btn + '</td></tr>';
-                    }).join('') || '<tr><td colspan="7">No rows</td></tr>';
+                        return '<tr><td class="admin-manage-mono">' + escapeHtml(c.code) + '</td><td>' + escapeHtml(c.title) + '</td><td>' + escapeHtml(c.department_name) + '</td><td>' + escapeHtml(c.instructor_name) + '</td><td>' + escapeHtml(c.semester + ' ' + c.academic_year) + '</td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(c.status) + '</span></td><td class="admin-manage-table__actions">' + btn + '</td></tr>';
+                    }).join('') || '<tr><td colspan="7" class="admin-manage-msg admin-manage-msg--empty">No courses in the catalog.</td></tr>';
                 } else {
-                    head.innerHTML = '<tr><th>ID</th><th>Name</th><th>Head</th><th>Faculty</th><th>Status</th><th>Actions</th></tr>';
+                    head.innerHTML = '<tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Head</th><th scope="col">Faculty</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
                     body.innerHTML = data.map(function (d) {
                         var active = d.status === 'active';
                         var btn = active
                             ? '<button type="button" class="table-action-btn" data-act="deactivate" data-entity="department" data-id="' + d.id + '">Deactivate</button>'
                             : '<button type="button" class="table-action-btn" disabled>—</button>';
-                        return '<tr><td>' + d.id + '</td><td>' + escapeHtml(d.name) + '</td><td>' + escapeHtml(d.head_name || '—') + '</td><td>' + escapeHtml(String(d.faculty_count)) + '</td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(d.status) + '</span></td><td>' + btn + '</td></tr>';
-                    }).join('') || '<tr><td colspan="6">No rows</td></tr>';
+                        return '<tr><td class="admin-manage-mono">' + d.id + '</td><td class="admin-manage-strong">' + escapeHtml(d.name) + '</td><td>' + escapeHtml(d.head_name || '—') + '</td><td>' + escapeHtml(String(d.faculty_count)) + '</td><td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(d.status) + '</span></td><td class="admin-manage-table__actions">' + btn + '</td></tr>';
+                    }).join('') || '<tr><td colspan="6" class="admin-manage-msg admin-manage-msg--empty">No departments yet — add one to get started.</td></tr>';
                 }
 
                 body.querySelectorAll('[data-act="deactivate"]').forEach(function (btn) {
@@ -713,7 +1160,9 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
                 });
             })
             .catch(function () {
-                body.innerHTML = '<tr><td colspan="' + cs + '" style="text-align:center;color:var(--error);">Could not load table</td></tr>';
+                body.innerHTML = '<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--error">Could not load directory.</td></tr>';
+                var c = document.getElementById('managePanelCount');
+                if (c) c.textContent = '';
             });
     }
 
@@ -732,9 +1181,77 @@ $avatarLetters = $fn !== '' ? strtoupper(substr($fn, 0, 2)) : 'AD';
         }
     });
 
+    document.getElementById('formChangePassword').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var msgEl = document.getElementById('cpFormMsg');
+        var nwEl = document.getElementById('cpNew');
+        var cfEl = document.getElementById('cpConfirm');
+        var nw = nwEl.value;
+        msgEl.hidden = true;
+        if (nw !== cfEl.value) {
+            msgEl.textContent = 'New password and confirmation do not match.';
+            msgEl.className = 'admin-settings-form-msg admin-settings-form-msg--error';
+            msgEl.hidden = false;
+            return;
+        }
+        var btn = document.getElementById('cpSubmit');
+        var cpRedirectAfterPw = false;
+        var cpBtnDefaultLabel = 'Update password & sign out';
+        btn.disabled = true;
+        try {
+            var r = await fetch('/api/auth.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    action: 'change_password',
+                    current_password: document.getElementById('cpCurrent').value,
+                    new_password: nw
+                })
+            });
+            var d = await r.json().catch(function () {
+                return {};
+            });
+            if (!r.ok || !d.success) {
+                msgEl.textContent = d.message || 'HTTP ' + r.status;
+                msgEl.className = 'admin-settings-form-msg admin-settings-form-msg--error';
+                msgEl.hidden = false;
+                return;
+            }
+            if (d.sign_in_again) {
+                cpRedirectAfterPw = true;
+                msgEl.textContent = d.message || 'Redirecting to sign-in…';
+                msgEl.className = 'admin-settings-form-msg admin-settings-form-msg--success';
+                msgEl.hidden = false;
+                showToast(d.message || 'Signed out — sign in with your new password.', 'success');
+                btn.textContent = 'Signing out…';
+                setTimeout(function () {
+                    window.location.href = 'login.php';
+                }, 950);
+                return;
+            }
+            e.target.reset();
+            msgEl.textContent = d.message || 'Password updated.';
+            msgEl.className = 'admin-settings-form-msg admin-settings-form-msg--success';
+            msgEl.hidden = false;
+            showToast(d.message || 'Password updated.', 'success');
+            refreshAdminSessionStatus();
+        } catch (err2) {
+            msgEl.textContent = 'Could not reach the server.';
+            msgEl.className = 'admin-settings-form-msg admin-settings-form-msg--error';
+            msgEl.hidden = false;
+        } finally {
+            if (!cpRedirectAfterPw) {
+                btn.disabled = false;
+                btn.textContent = cpBtnDefaultLabel;
+            }
+        }
+    });
+
     updateAddButtons();
     loadLookups().then(function () { loadDashboard(); });
 })();
 </script>
+<script src="<?= htmlspecialchars($ab) ?>/js/dashboard-sidebar.js"></script>
 </body>
 </html>

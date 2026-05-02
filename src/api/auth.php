@@ -5,8 +5,10 @@
  * Handles login and logout requests via AJAX.
  * 
  * POST /src/api/auth.php
- *   action=login  → { username, password, role }
- *   action=logout → destroys session
+ *   action=login           → { username, password, role }
+ *   action=logout          → destroys session
+ *   action=session_check   → { user } when session valid, else 401
+ *   action=change_password → { current_password, new_password }; ends session on success
  */
 
 header('Content-Type: application/json');
@@ -72,6 +74,49 @@ try {
         case 'logout':
             AuthService::logout();
             echo json_encode(['success' => true, 'message' => 'Logged out successfully.']);
+            break;
+
+        case 'session_check':
+            AuthService::initSession();
+            $profile = AuthService::getSanitizedUserHydratedFromDb();
+            if (!$profile) {
+                http_response_code(401);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Session expired, account inactive, or not signed in.',
+                ]);
+                exit;
+            }
+            echo json_encode(['success' => true, 'user' => $profile]);
+            break;
+
+        case 'change_password':
+            AuthService::initSession();
+            if (!AuthService::isLoggedIn()) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'Session expired or not signed in.']);
+                exit;
+            }
+            $currentPassword = (string) ($input['current_password'] ?? '');
+            $newPassword     = (string) ($input['new_password'] ?? '');
+            if ($currentPassword === '' || $newPassword === '') {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Current password and new password are required.']);
+                exit;
+            }
+            $result = AuthService::changeOwnPassword($currentPassword, $newPassword);
+            if (!$result['success']) {
+                $code = $result['code'] ?? 'error';
+                $status = ($code === 'auth') ? 401 : (($code === 'server') ? 500 : 400);
+                http_response_code($status);
+                echo json_encode(['success' => false, 'message' => $result['message'] ?? 'Unable to change password.']);
+                exit;
+            }
+            echo json_encode([
+                'success'       => true,
+                'message'       => $result['message'] ?? 'Password updated.',
+                'sign_in_again' => !empty($result['sign_in_again']),
+            ]);
             break;
 
         default:

@@ -18,10 +18,13 @@ $ab = '../../assets';
     <link rel="stylesheet" href="<?= htmlspecialchars($ab) ?>/css/dashboards.css">
 </head>
 <body class="dean-dashboard">
-<div class="admin-layout">
-    <aside class="sidebar" aria-label="Dean navigation">
+<div class="admin-layout" id="dashboardLayout">
+    <aside class="sidebar" id="dashboardSidebar" aria-label="Dean navigation">
         <div class="sidebar-header">
-            <div class="sidebar-logo">HOPE</div>
+            <div class="sidebar-logo" title="HOPE">HOPE</div>
+            <button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-expanded="true" aria-controls="dashboardSidebar" title="Collapse sidebar">
+                <svg class="sidebar-collapse-btn__icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+            </button>
         </div>
         <nav class="nav-links">
             <button type="button" class="nav-item active" data-section="overview" aria-current="page">
@@ -677,5 +680,6 @@ $ab = '../../assets';
     loadDashboard();
 })();
 </script>
+<script src="<?= htmlspecialchars($ab) ?>/js/dashboard-sidebar.js"></script>
 </body>
 </html>

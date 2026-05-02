@@ -376,6 +376,20 @@ class AnalyticsService {
         $stmt = $db->query('SELECT COUNT(*) as cnt FROM departments WHERE status = "active"');
         $stats['total_departments'] = (int) $stmt->fetch()['cnt'];
 
+        // Staff (admin, dean, HR)
+        $stmt = $db->query(
+            'SELECT COUNT(*) as cnt FROM users WHERE role IN ("dean", "hr", "admin") AND status = "active"'
+        );
+        $stats['total_staff'] = (int) $stmt->fetch()['cnt'];
+
+        // Active catalog courses
+        $stmt = $db->query('SELECT COUNT(*) as cnt FROM courses WHERE status = "active"');
+        $stats['total_courses_active'] = (int) $stmt->fetch()['cnt'];
+
+        // All active accounts (any role)
+        $stmt = $db->query('SELECT COUNT(*) as cnt FROM users WHERE status = "active"');
+        $stats['total_users_active'] = (int) $stmt->fetch()['cnt'];
+
         // Total evaluations
         $stmt = $db->query('SELECT COUNT(*) as cnt FROM evaluation_sheets');
         $stats['total_evaluations'] = (int) $stmt->fetch()['cnt'];

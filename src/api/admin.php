@@ -17,8 +17,25 @@ $db = Database::getConnection();
 if ($method === 'GET' && $action === 'list') {
     switch ($entity) {
         case 'users':
-            $stmt = $db->query('SELECT id, username, full_name, email, role, department_id, status, created_at FROM users ORDER BY id');
-            echo json_encode(['success'=>true,'data'=>$stmt->fetchAll()]); break;
+            $roleFilter = trim((string) ($_GET['role'] ?? ''));
+            $allowedFilterRoles = ['student', 'instructor', 'dean', 'hr', 'admin'];
+            if ($roleFilter !== '' && !in_array($roleFilter, $allowedFilterRoles, true)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Invalid role filter.']);
+                exit;
+            }
+            if ($roleFilter === '') {
+                $stmt = $db->query('SELECT id, username, full_name, email, role, department_id, status, created_at FROM users ORDER BY id');
+                $rows = $stmt->fetchAll();
+            } else {
+                $stmt = $db->prepare(
+                    'SELECT id, username, full_name, email, role, department_id, status, created_at FROM users WHERE role = ? ORDER BY id'
+                );
+                $stmt->execute([$roleFilter]);
+                $rows = $stmt->fetchAll();
+            }
+            echo json_encode(['success' => true, 'data' => $rows, 'role_filter' => $roleFilter === '' ? null : $roleFilter]);
+            break;
         case 'courses':
             $stmt = $db->query('SELECT c.*, d.name as department_name, u.full_name as instructor_name FROM courses c JOIN departments d ON c.department_id=d.id JOIN users u ON c.instructor_id=u.id ORDER BY c.id');
             echo json_encode(['success'=>true,'data'=>$stmt->fetchAll()]); break;
@@ -161,8 +178,20 @@ if ($method === 'GET' && $action === 'list') {
                 exit;
             }
             $stmt = $db->prepare('INSERT INTO departments (name, status) VALUES (?, "active")');
-            $stmt->execute([$name]);
-            echo json_encode(['success'=>true,'message'=>'Department created.','id'=>$db->lastInsertId()]); break;
+            try {
+                $stmt->execute([$name]);
+            } catch (PDOException $e) {
+                if ($e->getCode() === '23000' || strpos($e->getMessage(), 'Duplicate') !== false) {
+                    http_response_code(409);
+                    echo json_encode(['success' => false, 'message' => 'A department with that name already exists.']);
+                    exit;
+                }
+                throw $e;
+            }
+            $newDeptId = (int) $db->lastInsertId();
+            AuthService::logAudit(AuthService::getUserId(), 'department_created', 'department', $newDeptId, "Created department: {$name}");
+            echo json_encode(['success' => true, 'message' => 'Department created.', 'id' => $newDeptId]);
+            break;
         default:
             http_response_code(400); echo json_encode(['success'=>false,'message'=>'Unknown entity']); break;
     }

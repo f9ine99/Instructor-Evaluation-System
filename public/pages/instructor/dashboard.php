@@ -9,8 +9,8 @@ $ab = '../../assets';
 <link rel="stylesheet" href="<?=$ab?>/css/variables.css"><link rel="stylesheet" href="<?=$ab?>/css/base.css">
 <link rel="stylesheet" href="<?=$ab?>/css/layout.css"><link rel="stylesheet" href="<?=$ab?>/css/components.css">
 <link rel="stylesheet" href="<?=$ab?>/css/dashboards.css"></head>
-<body><div class="admin-layout">
-<aside class="sidebar"><div class="sidebar-header"><div class="sidebar-logo">HOPE</div></div>
+<body><div class="admin-layout" id="dashboardLayout">
+<aside class="sidebar" id="dashboardSidebar" aria-label="Instructor navigation"><div class="sidebar-header"><div class="sidebar-logo" title="HOPE">HOPE</div><button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-expanded="true" aria-controls="dashboardSidebar" title="Collapse sidebar"><svg class="sidebar-collapse-btn__icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg></button></div>
 <nav class="nav-links">
 <a class="nav-item active" onclick="switchSection('overview')"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg><span>Overview</span></a>
 <a class="nav-item" onclick="switchSection('reports')"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Detailed Reports</span></a>
@@ -124,4 +124,6 @@ setTimeout(()=>{btn.textContent=orig;btn.style.background='';},2000);
 });
 
 loadDashboard();
-</script></body></html>
+</script>
+<script src="<?= htmlspecialchars($ab) ?>/js/dashboard-sidebar.js"></script>
+</body></html>

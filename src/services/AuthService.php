@@ -180,6 +180,132 @@ class AuthService {
     }
 
     /**
+     * Non-sensitive session user for API responses (no password_hash).
+     */
+    public static function getSanitizedSessionUser(): ?array {
+        $user = self::getCurrentUser();
+        if (!$user) {
+            return null;
+        }
+
+        return [
+            'id'          => (int) $user['id'],
+            'username'    => $user['username'],
+            'full_name'   => $user['full_name'],
+            'email'       => $user['email'] ?? '',
+            'role'        => $user['role'],
+        ];
+    }
+
+    /**
+     * Re-load the signed-in user from the database by session user id (must be active).
+     * Updates $_SESSION['user'] so it matches the DB (no stale name/email). If missing or inactive, logs out.
+     *
+     * @return array{id:int, username:string, full_name:string, email:string, role:string}|null
+     */
+    public static function getSanitizedUserHydratedFromDb(): ?array {
+        self::initSession();
+        $sess = self::getCurrentUser();
+        if (!$sess || empty($sess['id'])) {
+            return null;
+        }
+
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare(
+                'SELECT id, username, full_name, email, role, department_id, status
+                 FROM users WHERE id = ? LIMIT 1'
+            );
+            $stmt->execute([(int) $sess['id']]);
+            $row = $stmt->fetch();
+
+            if (!$row || (($row['status'] ?? '') !== 'active')) {
+                self::logout();
+
+                return null;
+            }
+
+            unset($row['status']);
+            $fresh = $_SESSION['user'];
+            foreach (['id', 'username', 'full_name', 'email', 'role', 'department_id'] as $k) {
+                if (array_key_exists($k, $row)) {
+                    $fresh[$k] = $row[$k];
+                }
+            }
+            unset($fresh['password_hash']);
+            $_SESSION['user'] = $fresh;
+
+            return [
+                'id'          => (int) $fresh['id'],
+                'username'    => $fresh['username'],
+                'full_name'   => $fresh['full_name'],
+                'email'       => $fresh['email'] ?? '',
+                'role'        => $fresh['role'],
+            ];
+        } catch (\Throwable $e) {
+            error_log('Session hydration failed: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Change password for the currently logged-in active user after verifying current password.
+     *
+     * @return array{success:bool, message?:string, code?:string}
+     */
+    public static function changeOwnPassword(string $currentPassword, string $newPassword): array {
+        self::initSession();
+        $user = self::getCurrentUser();
+
+        if (!$user) {
+            return ['success' => false, 'code' => 'auth', 'message' => 'Not signed in.'];
+        }
+
+        if ($newPassword === '' || strlen($newPassword) < 8) {
+            return ['success' => false, 'code' => 'validation', 'message' => 'New password must be at least 8 characters.'];
+        }
+
+        try {
+            $db = Database::getConnection();
+            $stmt = $db->prepare('SELECT password_hash FROM users WHERE id = ? AND status = ? LIMIT 1');
+            $stmt->execute([(int) $user['id'], 'active']);
+            $row = $stmt->fetch();
+
+            if (!$row) {
+                return ['success' => false, 'code' => 'auth', 'message' => 'Account not found or inactive.'];
+            }
+
+            if (!password_verify($currentPassword, $row['password_hash'])) {
+                self::logAudit((int) $user['id'], 'password_change_failed', 'user', (int) $user['id'], 'Invalid current password');
+
+                return ['success' => false, 'code' => 'current', 'message' => 'Current password is incorrect.'];
+            }
+
+            if (password_verify($newPassword, $row['password_hash'])) {
+                return ['success' => false, 'code' => 'validation', 'message' => 'Choose a password different from your current one.'];
+            }
+
+            $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+            $up = $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+            $up->execute([$hash, (int) $user['id']]);
+
+            self::logAudit((int) $user['id'], 'password_changed', 'user', (int) $user['id'], null);
+            self::logout();
+
+            return [
+                'success'        => true,
+                'sign_in_again'  => true,
+                'message'        => 'Password updated. You have been signed out — sign in again with your new password.',
+            ];
+        } catch (\Throwable $e) {
+            error_log('Password change failed: ' . $e->getMessage());
+
+            return ['success' => false, 'code' => 'server', 'message' => 'Could not update password. Try again later.'];
+        }
+    }
+
+    /**
      * Write an entry to the audit log
      */
     public static function logAudit(?int $userId, string $action, ?string $entityType = null, ?int $entityId = null, ?string $details = null): void {
