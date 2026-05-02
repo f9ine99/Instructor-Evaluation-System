@@ -3,6 +3,23 @@ require_once __DIR__ . '/../../../src/middleware/auth.php';
 requireAuth('dean');
 $user = AuthService::getCurrentUser();
 $ab = '../../assets';
+
+$deptDisplayName = '';
+$deptId = (int) ($user['department_id'] ?? 0);
+if ($deptId > 0) {
+    require_once __DIR__ . '/../../../src/config/database.php';
+    try {
+        $dbc = Database::getConnection();
+        $dst = $dbc->prepare('SELECT name FROM departments WHERE id = ? LIMIT 1');
+        $dst->execute([$deptId]);
+        $dn = $dst->fetchColumn();
+        if ($dn !== false && $dn !== null && trim((string) $dn) !== '') {
+            $deptDisplayName = trim((string) $dn);
+        }
+    } catch (Throwable $e) {
+        // leave empty; dashboard still loads from analytics
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -35,9 +52,9 @@ $ab = '../../assets';
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 <span>Manage Evaluations</span>
             </button>
-            <button type="button" class="nav-item" data-section="results">
+            <button type="button" class="nav-item" data-section="results" title="Results explorer">
                 <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <span>Results Viewer</span>
+                <span>Results explorer</span>
             </button>
         </nav>
         <div class="sidebar-footer">
@@ -61,22 +78,57 @@ $ab = '../../assets';
             </div>
         </div>
 
-        <p class="dean-scope-note" id="deanScopeNote">Overview metrics and lists below are scoped to <strong>your department</strong> only.</p>
-
-        <section id="overview" class="section-content active" aria-labelledby="pageTitle">
-            <div id="deanGapBanner" class="dean-gap-banner-root" hidden aria-live="polite"></div>
-            <div class="stats-grid" id="statsGrid">
-                <p style="color:var(--text-secondary);">Loading…</p>
+        <section id="overview" class="section-content dean-overview-page active" aria-labelledby="pageTitle">
+            <div class="dean-overview-hero">
+                <div class="dean-overview-hero__main">
+                    <p class="dean-overview-hero__eyebrow">Department dashboard</p>
+                    <h2 class="dean-overview-hero__title"><?= htmlspecialchars($deptDisplayName !== '' ? $deptDisplayName : 'Your department') ?></h2>
+                    <p class="dean-overview-hero__lead">
+                        Live metrics below are scoped to <strong><?= htmlspecialchars($deptDisplayName !== '' ? $deptDisplayName : 'your department') ?></strong>—open evaluations, responses, instructor averages, and latest student activity.
+                    </p>
+                </div>
+                <div class="dean-overview-hero__actions" role="group" aria-label="Quick navigation">
+                    <button type="button" class="dean-quick-action" data-quick-section="evaluations">
+                        <span class="dean-quick-action__icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        </span>
+                        <span class="dean-quick-action__text"><span class="dean-quick-action__label">Manage evaluations</span><span class="dean-quick-action__hint">Sheets &amp; lifecycle</span></span>
+                    </button>
+                    <button type="button" class="dean-quick-action dean-quick-action--secondary" data-quick-section="results">
+                        <span class="dean-quick-action__icon" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </span>
+                        <span class="dean-quick-action__text"><span class="dean-quick-action__label">Results explorer</span><span class="dean-quick-action__hint">Scores &amp; comments</span></span>
+                    </button>
+                </div>
             </div>
-            <div class="analytics-grid">
-                <div class="analytics-card">
-                    <h3 class="analytics-card__title">Instructor performance (your department)</h3>
-                    <div id="deptInstructors"><p style="color:var(--text-secondary);">Loading…</p></div>
-                </div>
-                <div class="analytics-card">
-                    <h3 class="analytics-card__title">Recent submissions</h3>
-                    <div id="recentSubs"><p style="color:var(--text-secondary);">Loading…</p></div>
-                </div>
+
+            <div id="deanGapBanner" class="dean-gap-banner-root" hidden aria-live="polite"></div>
+
+            <div class="dean-metrics" id="statsGrid" aria-busy="true" aria-live="polite">
+                <p class="dean-metrics__loading">Loading metrics…</p>
+            </div>
+
+            <div class="dean-overview-panels">
+                <section class="dean-panel dean-panel--instructors">
+                    <header class="dean-panel__header">
+                        <h3 class="dean-panel__title">Instructor performance</h3>
+                        <p class="dean-panel__sub">Avg. rating across evaluation responses in your department (where data exists).</p>
+                    </header>
+                    <div class="dean-panel__body dean-panel__body--flush">
+                        <div id="deptInstructors"><p class="dean-placeholder">Loading instructors…</p></div>
+                    </div>
+                </section>
+
+                <section class="dean-panel dean-panel--activity">
+                    <header class="dean-panel__header">
+                        <h3 class="dean-panel__title">Recent activity</h3>
+                        <p class="dean-panel__sub">Latest anonymous submissions from students in your department.</p>
+                    </header>
+                    <div class="dean-panel__body dean-panel__body--flush">
+                        <div id="recentSubs"><p class="dean-placeholder">Loading submissions…</p></div>
+                    </div>
+                </section>
             </div>
         </section>
 
@@ -113,25 +165,46 @@ $ab = '../../assets';
             </div>
         </section>
 
-        <section id="results" class="section-content" aria-hidden="true">
-            <h2 class="section-heading">Results viewer</h2>
-            <p class="dean-scope-note">Select an evaluation to see per-question averages and anonymized comments.</p>
-            <div class="form-group" style="margin-bottom:24px;max-width:420px;">
-                <label class="form-label" for="resultSheetSelect">Evaluation</label>
-                <select class="form-select" id="resultSheetSelect">
-                    <option value="">Select an evaluation…</option>
-                </select>
+        <section id="results" class="section-content dean-results-explorer" aria-label="Results explorer" aria-hidden="true">
+            <header class="dean-results-explorer__intro">
+                <p class="dean-results-explorer__eyebrow">Department analytics</p>
+                <p class="dean-results-explorer__lead">Pick an evaluation sheet to inspect <strong>per-question averages</strong> and read <strong>anonymized</strong> student comments. Data reflects your department only.</p>
+            </header>
+
+            <div class="dean-results-picker-card">
+                <div class="dean-results-picker-card__head">
+                    <span class="dean-results-picker-card__glyph" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-8h6m-6 4h6m-6 8h6"/></svg>
+                    </span>
+                    <div>
+                        <label class="dean-results-picker-card__label" for="resultSheetSelect">Evaluation sheet</label>
+                        <p class="dean-results-picker-card__hint" id="resultSheetSelectHint">Sheets from <strong>Manage evaluations</strong> appear here. Choose one to load scores and comments.</p>
+                    </div>
+                </div>
+                <div class="dean-results-picker-card__field">
+                    <select class="form-select dean-results-select" id="resultSheetSelect" aria-describedby="resultSheetSelectHint">
+                        <option value="">Select an evaluation…</option>
+                    </select>
+                </div>
+                <p class="dean-results-selection-meta" id="deanResultsSelectionMeta" hidden aria-live="polite"></p>
             </div>
-            <div id="resultView" class="result-view" hidden>
-                <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <h3 class="analytics-card__title">Score distribution (per question)</h3>
-                        <div id="scoreDistribution"></div>
-                    </div>
-                    <div class="analytics-card">
-                        <h3 class="analytics-card__title">Student comments</h3>
-                        <div id="resultComments"></div>
-                    </div>
+
+            <div id="resultView" class="dean-results-detail" hidden>
+                <div class="dean-results-detail__grid">
+                    <section class="dean-results-panel" aria-labelledby="deanResultsScoresHeading">
+                        <div class="dean-results-panel__head">
+                            <h3 class="dean-results-panel__title" id="deanResultsScoresHeading">Question scores</h3>
+                            <p class="dean-results-panel__sub">Mean rating (1–5) and response count per question.</p>
+                        </div>
+                        <div class="dean-results-panel__body" id="scoreDistribution"></div>
+                    </section>
+                    <section class="dean-results-panel dean-results-panel--comments" aria-labelledby="deanResultsCommentsHeading">
+                        <div class="dean-results-panel__head">
+                            <h3 class="dean-results-panel__title" id="deanResultsCommentsHeading">Anonymous comments</h3>
+                            <p class="dean-results-panel__sub">Free-text feedback; not linked to individual students.</p>
+                        </div>
+                        <div class="dean-results-panel__body dean-results-panel__body--comments" id="resultComments"></div>
+                    </section>
                 </div>
             </div>
         </section>
@@ -305,7 +378,7 @@ $ab = '../../assets';
     const statusColors = { draft:'#6b7280', scheduled:'#3b82f6', open:'#10b981', closed:'#f59e0b', reviewed:'#8b5cf6', archived:'#6b7280' };
     const nextAction = { draft:'Publish', scheduled:'Open', open:'Close', closed:'Review', reviewed:'Archive' };
     const nextState = { draft:'open', scheduled:'open', open:'closed', closed:'reviewed', reviewed:'archived' };
-    const sectionTitles = { overview:'Dean Overview', evaluations:'Manage Evaluations', results:'Results Viewer' };
+    const sectionTitles = { overview:'Dean Overview', evaluations:'Manage Evaluations', results:'Results explorer' };
 
     function escapeHtml(s) {
         if (s == null || s === '') return '';
@@ -365,6 +438,12 @@ $ab = '../../assets';
     document.querySelectorAll('.nav-item[data-section]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             switchSection(btn.getAttribute('data-section'));
+        });
+    });
+    document.querySelectorAll('[data-quick-section]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var sid = btn.getAttribute('data-quick-section');
+            if (sid) switchSection(sid);
         });
     });
 
@@ -541,15 +620,49 @@ $ab = '../../assets';
         );
     }
 
+    function deanStatSvg(pathD) {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="' + pathD + '"/></svg>';
+    }
+
+    function renderDeanStatCard(mod, label, rawValue, hint) {
+        var icons = {
+            evals:
+                'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+            subs: 'M18 21V11m-6 10V9m-6 10V5',
+            review:
+                'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+            score: 'M3 17l6-7 5 6 8-14'
+        };
+        return (
+            '<article class="dean-stat-card dean-stat-card--' +
+            mod +
+            '" role="group">' +
+            '<div class="dean-stat-card__icon">' +
+            deanStatSvg(icons[mod] || icons.evals) +
+            '</div>' +
+            '<div class="dean-stat-card__body">' +
+            '<p class="dean-stat-card__label">' +
+            escapeHtml(label) +
+            '</p>' +
+            '<p class="dean-stat-card__value">' +
+            escapeHtml(rawValue) +
+            '</p>' +
+            '<p class="dean-stat-card__hint">' +
+            escapeHtml(hint) +
+            '</p></div></article>'
+        );
+    }
+
     async function loadDashboard() {
         const statsEl = document.getElementById('statsGrid');
         const gapEl = document.getElementById('deanGapBanner');
         function errStats(msg) {
+            statsEl.setAttribute('aria-busy', 'false');
             if (gapEl) {
                 gapEl.hidden = true;
                 gapEl.innerHTML = '';
             }
-            statsEl.innerHTML = '<p style="color:var(--error);padding:12px;">' + escapeHtml(msg) + '</p>';
+            statsEl.innerHTML = '<p class="dean-metrics__error">' + escapeHtml(msg) + '</p>';
         }
         try {
             const [sRes, gRes] = await Promise.all([
@@ -573,12 +686,40 @@ $ab = '../../assets';
             try { sData = await sRes.json(); } catch (x) { errStats('Invalid response from server.'); return; }
             if (sRes.status === 401) { errStats('Session expired. Sign in again.'); return; }
             if (!sRes.ok || !sData.success) { errStats(sData.message || ('HTTP ' + sRes.status)); return; }
+            statsEl.setAttribute('aria-busy', 'false');
             const s = sData.stats;
+            const avgDisp =
+                s.system_avg_score != null &&
+                Number(s.system_avg_score) > 0
+                    ? Number(s.system_avg_score).toFixed(2)
+                    : '—';
             statsEl.innerHTML =
-                '<div class="stat-card"><div class="stat-info"><h3>Active evaluations</h3><div class="value">' + s.open_evaluations + '</div></div></div>' +
-                '<div class="stat-card"><div class="stat-info"><h3>Total submissions</h3><div class="value">' + s.total_submissions + '</div></div></div>' +
-                '<div class="stat-card"><div class="stat-info"><h3>Pending reviews</h3><div class="value">' + s.pending_reviews + '</div></div></div>' +
-                '<div class="stat-card"><div class="stat-info"><h3>Average score</h3><div class="value">' + s.system_avg_score + '</div></div></div>';
+                '<div class="dean-metrics__grid">' +
+                renderDeanStatCard(
+                    'evals',
+                    'Active evaluations',
+                    String(s.open_evaluations),
+                    'Sheets currently open for student responses.'
+                ) +
+                renderDeanStatCard(
+                    'subs',
+                    'Total submissions',
+                    String(s.total_submissions),
+                    'All submitted evaluations in your department.'
+                ) +
+                renderDeanStatCard(
+                    'review',
+                    'Pending reviews',
+                    String(s.pending_reviews),
+                    'Closed sheets awaiting your review step.'
+                ) +
+                renderDeanStatCard(
+                    'score',
+                    'Avg. rating (1–5)',
+                    avgDisp,
+                    avgDisp === '—' ? 'No scored responses yet in your department.' : 'Mean across all question ratings submitted.'
+                ) +
+                '</div>';
         } catch (e) {
             if (gapEl) {
                 gapEl.hidden = true;
@@ -592,17 +733,43 @@ $ab = '../../assets';
             const iData = await iRes.json();
             const host = document.getElementById('deptInstructors');
             if (iData.success && iData.instructors && iData.instructors.length) {
-                host.innerHTML = iData.instructors.map(function (i) {
+                host.innerHTML = iData.instructors.map(function (i, idx) {
                     const avg = i.avg_rating != null ? parseFloat(i.avg_rating).toFixed(1) : 'N/A';
-                    const cls = i.avg_rating >= 4 ? 'score-high' : (i.avg_rating >= 3 ? 'score-med' : 'score-low');
-                    return '<div class="dean-instructor-row"><span class="dean-instructor-name">' + escapeHtml(i.full_name) + '</span>' +
-                        '<span class="score-badge ' + cls + '">' + avg + '</span></div>';
+                    const cls =
+                        i.avg_rating >= 4
+                            ? 'score-high'
+                            : i.avg_rating >= 3
+                              ? 'score-med'
+                              : 'score-low';
+                    var subs = parseInt(i.total_submissions, 10);
+                    if (isNaN(subs)) subs = 0;
+                    return (
+                        '<div class="dean-instructor-row">' +
+                        '<div class="dean-instructor-row__left">' +
+                        '<span class="dean-instructor-rank" aria-hidden="true">' +
+                        String(idx + 1) +
+                        '</span>' +
+                        '<div class="dean-instructor-row__name-wrap">' +
+                        '<span class="dean-instructor-name">' +
+                        escapeHtml(i.full_name) +
+                        '</span>' +
+                        '<span class="dean-instructor-subs">' +
+                        subs +
+                        ' response' +
+                        (subs === 1 ? '' : 's') +
+                        '</span></div></div>' +
+                        '<span class="score-badge score-badge--dean ' +
+                        cls +
+                        '">' +
+                        avg +
+                        '</span></div>'
+                    );
                 }).join('');
             } else {
-                host.innerHTML = '<p style="color:var(--text-muted);text-align:center;">No instructor data yet.</p>';
+                host.innerHTML = '<p class="dean-placeholder">No instructor averages yet.</p>';
             }
         } catch (e) {
-            document.getElementById('deptInstructors').innerHTML = '<p style="color:var(--error);">Could not load instructors.</p>';
+            document.getElementById('deptInstructors').innerHTML = '<p class="dean-placeholder dean-placeholder--error">Could not load instructors.</p>';
         }
 
         try {
@@ -611,15 +778,31 @@ $ab = '../../assets';
             const rh = document.getElementById('recentSubs');
             if (rData.success && rData.submissions && rData.submissions.length) {
                 rh.innerHTML = rData.submissions.map(function (s) {
-                    return '<div class="dean-submission-row"><div class="dean-submission-title">' +
-                        escapeHtml(s.course_code) + ' — ' + escapeHtml(s.instructor_name) + '</div>' +
-                        '<div class="dean-submission-meta">' + new Date(s.submitted_at).toLocaleString() + '</div></div>';
+                    var d = new Date(s.submitted_at);
+                    var iso = isNaN(d.getTime()) ? '' : d.toISOString();
+                    var when = isNaN(d.getTime()) ? '—' : d.toLocaleString();
+                    var timeHtml = iso
+                        ? '<time class="dean-submission-time" datetime="' + escapeHtml(iso) + '">' + escapeHtml(when) + '</time>'
+                        : escapeHtml(when);
+                    return (
+                        '<div class="dean-submission-row">' +
+                        '<span class="dean-submission-dot" aria-hidden="true"></span>' +
+                        '<div class="dean-submission-row__inner">' +
+                        '<div class="dean-submission-title">' +
+                        escapeHtml(s.course_code) +
+                        '<span class="dean-submission-sep">·</span>' +
+                        escapeHtml(s.instructor_name) +
+                        '</div>' +
+                        '<div class="dean-submission-meta">' +
+                        timeHtml +
+                        '</div></div></div>'
+                    );
                 }).join('');
             } else {
-                rh.innerHTML = '<p style="color:var(--text-muted);text-align:center;">No submissions yet.</p>';
+                rh.innerHTML = '<p class="dean-placeholder">No submissions recorded yet.</p>';
             }
         } catch (e) {
-            document.getElementById('recentSubs').innerHTML = '<p style="color:var(--error);">Could not load activity.</p>';
+            document.getElementById('recentSubs').innerHTML = '<p class="dean-placeholder dean-placeholder--error">Could not load activity.</p>';
         }
 
         loadEvalTable();
@@ -851,7 +1034,9 @@ $ab = '../../assets';
             });
             sel.innerHTML = '<option value="">Select an evaluation…</option>';
             d.sheets.forEach(function (s) {
-                sel.innerHTML += '<option value="' + s.id + '">' + escapeHtml(s.title) + ' (' + escapeHtml(s.status) + ')</option>';
+                var parts = [s.title || '—', s.course_code || '—', s.status || '—'];
+                var optLabel = parts.join(' · ');
+                sel.innerHTML += '<option value="' + s.id + '">' + escapeHtml(optLabel) + '</option>';
             });
         } catch (e) {
             document.getElementById('evalTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--error);">Could not load evaluations.</td></tr>';
@@ -957,34 +1142,66 @@ $ab = '../../assets';
     document.getElementById('resultSheetSelect').addEventListener('change', async function () {
         const id = this.value;
         const rv = document.getElementById('resultView');
+        const meta = document.getElementById('deanResultsSelectionMeta');
+        const opt = this.selectedIndex >= 0 ? this.options[this.selectedIndex] : null;
         if (!id) {
             rv.hidden = true;
+            if (meta) {
+                meta.hidden = true;
+                meta.textContent = '';
+            }
             return;
         }
+        if (meta && opt) {
+            meta.hidden = false;
+            meta.innerHTML =
+                '<span class="dean-results-selection-meta__label">Showing</span> ' +
+                '<span class="dean-results-selection-meta__value">' +
+                escapeHtml(opt.textContent || '') +
+                '</span>';
+        }
         rv.hidden = false;
+        const sd = document.getElementById('scoreDistribution');
+        const rc = document.getElementById('resultComments');
+        sd.innerHTML = '<p class="dean-results-panel__loading">Loading scores…</p>';
+        rc.innerHTML = '<p class="dean-results-panel__loading">Loading comments…</p>';
         try {
             const qr = await fetch('/api/analytics.php?action=sheet_question_stats&sheet_id=' + encodeURIComponent(id), {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' }
             });
             const qd = await qr.json();
-            const sd = document.getElementById('scoreDistribution');
             if (qd.success && qd.questions && qd.questions.length) {
                 sd.innerHTML = qd.questions.map(function (q) {
                     const avg = q.avg_rating != null ? parseFloat(q.avg_rating) : NaN;
                     const n = parseInt(q.response_count, 10) || 0;
                     const pct = !isNaN(avg) && n > 0 ? Math.min(100, Math.max(0, (avg / 5) * 100)) : 0;
                     const fillClass = avg >= 4 ? 'score-high' : (avg >= 3 ? 'score-med' : 'score-low');
-                    const snippet = (q.question_text || '').length > 140 ? (q.question_text || '').substring(0, 140) + '…' : (q.question_text || '');
-                    return '<div class="dean-q-block"><div class="dean-q-text">' + escapeHtml(snippet) + '</div>' +
-                        '<div class="score-bar"><div class="score-fill ' + fillClass + ' score-bar-fill--real" style="width:' + pct.toFixed(1) + '%;"></div></div>' +
-                        '<div class="dean-q-meta">Avg <strong>' + (n ? avg.toFixed(2) : '—') + '</strong> / 5 · ' + n + ' responses</div></div>';
+                    const snippet = (q.question_text || '').length > 160 ? (q.question_text || '').substring(0, 160) + '…' : (q.question_text || '');
+                    return (
+                        '<div class="dean-q-block dean-results-q">' +
+                        '<div class="dean-q-text">' +
+                        escapeHtml(snippet) +
+                        '</div>' +
+                        '<div class="dean-results-q__bar score-bar"><div class="score-fill ' +
+                        fillClass +
+                        ' score-bar-fill--real" style="width:' +
+                        pct.toFixed(1) +
+                        '%;"></div></div>' +
+                        '<div class="dean-q-meta"><span class="dean-results-q__avg">Avg <strong>' +
+                        (n ? avg.toFixed(2) : '—') +
+                        '</strong> / 5</span><span class="dean-results-q__n">' +
+                        n +
+                        ' response' +
+                        (n === 1 ? '' : 's') +
+                        '</span></div></div>'
+                    );
                 }).join('');
             } else {
-                sd.innerHTML = '<p style="color:var(--text-muted);">No response data for this sheet yet.</p>';
+                sd.innerHTML = '<p class="dean-results-panel__empty">No response data for this sheet yet.</p>';
             }
         } catch (e) {
-            document.getElementById('scoreDistribution').innerHTML = '<p style="color:var(--error);">Could not load scores.</p>';
+            sd.innerHTML = '<p class="dean-results-panel__error">Could not load scores.</p>';
         }
         try {
             const cr = await fetch('/api/analytics.php?action=sheet_comments&sheet_id=' + encodeURIComponent(id), {
@@ -992,17 +1209,23 @@ $ab = '../../assets';
                 headers: { Accept: 'application/json' }
             });
             const cd = await cr.json();
-            const rc = document.getElementById('resultComments');
             if (cd.success && cd.comments && cd.comments.length) {
                 rc.innerHTML = cd.comments.map(function (c) {
-                    return '<div class="dean-comment-card"><p class="dean-comment-text">“' + escapeHtml(c.comment_text) + '”</p>' +
-                        '<span class="dean-comment-date">' + new Date(c.submitted_at).toLocaleDateString() + '</span></div>';
+                    var dt = new Date(c.submitted_at);
+                    var when = isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString(undefined, { dateStyle: 'medium' });
+                    return (
+                        '<article class="dean-comment-card dean-results-comment"><p class="dean-comment-text">“' +
+                        escapeHtml(c.comment_text) +
+                        '”</p><span class="dean-comment-date">' +
+                        escapeHtml(when) +
+                        '</span></article>'
+                    );
                 }).join('');
             } else {
-                rc.innerHTML = '<p style="color:var(--text-muted);">No comments.</p>';
+                rc.innerHTML = '<p class="dean-results-panel__empty">No comments for this sheet.</p>';
             }
         } catch (e) {
-            document.getElementById('resultComments').innerHTML = '<p style="color:var(--error);">Could not load comments.</p>';
+            rc.innerHTML = '<p class="dean-results-panel__error">Could not load comments.</p>';
         }
     });
 

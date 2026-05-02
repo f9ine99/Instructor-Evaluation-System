@@ -130,7 +130,7 @@ $assetBase = '../../assets';
             <form id="evalForm" novalidate>
                 <div class="card eval-questions-card">
                     <h2 class="card__title">Evaluation Questions</h2>
-                    <p class="eval-questions-card__intro">Use <strong>Next</strong> to move forward. Choose a score on each step before continuing. You can also swipe left or right on the question area to change steps.</p>
+                    <p class="eval-questions-card__intro">Tap a score to move forward automatically. Use <strong>Back</strong> if you need to change an answer. You can also swipe left (next) or swipe right (back) on the question area.</p>
                     <div class="eval-scale-compact" aria-label="Rating scale">
                         <div class="eval-scale-compact__inner">
                             <span class="eval-scale-compact__pill"><strong>5</strong> Strongly agree</span>
@@ -152,8 +152,21 @@ $assetBase = '../../assets';
                         </div>
                         <nav class="eval-onboard__nav" aria-label="Question navigation">
                             <button type="button" class="btn btn--secondary eval-onboard__prev" id="evalOnboardPrev" disabled>Back</button>
-                            <button type="button" class="btn btn--primary eval-onboard__next" id="evalOnboardNext" disabled>Next</button>
                         </nav>
+                        <p class="eval-onboard__hint" id="evalOnboardHint">Choose a rating to go to the next question.</p>
+                    </div>
+                    <div class="eval-questions-celebration" id="evalQuestionsCelebration" aria-hidden="true">
+                        <div class="eval-questions-celebration__backdrop"></div>
+                        <div class="eval-questions-celebration__content">
+                            <div class="eval-questions-celebration__check-wrap" aria-hidden="true">
+                                <span class="eval-questions-celebration__ring"></span>
+                                <span class="eval-questions-celebration__check">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                </span>
+                            </div>
+                            <p class="eval-questions-celebration__title">All questions answered</p>
+                            <p class="eval-questions-celebration__sub">Nice work. Next, add optional comments or submit your evaluation.</p>
+                        </div>
                     </div>
                     <p class="eval-onboard-empty" id="evalOnboardEmpty" hidden>No questions were loaded for this evaluation.</p>
                 </div>
@@ -247,32 +260,93 @@ $assetBase = '../../assets';
             }
         }
 
+        let onboardAdvanceTimer = null;
+
+        function clearOnboardAdvanceTimer() {
+            if (onboardAdvanceTimer !== null) {
+                clearTimeout(onboardAdvanceTimer);
+                onboardAdvanceTimer = null;
+            }
+        }
+
+        function syncOnboardHint() {
+            const hint = document.getElementById('evalOnboardHint');
+            if (!hint || onboardTotal === 0) return;
+            const last = currentOnboardStep >= onboardTotal - 1;
+            hint.textContent = last
+                ? 'Pick a score to finish this section and continue to comments.'
+                : 'Choose a rating to go to the next question.';
+        }
+
         function syncOnboardUI() {
             const track = document.getElementById('evalOnboardTrack');
             const fill = document.getElementById('evalOnboardProgress');
             const label = document.getElementById('evalOnboardLabel');
             const prevBtn = document.getElementById('evalOnboardPrev');
-            const nextBtn = document.getElementById('evalOnboardNext');
             if (!track || onboardTotal === 0) return;
             track.style.transform = 'translate3d(-' + (currentOnboardStep * 100) + '%, 0, 0)';
             const pct = ((currentOnboardStep + 1) / onboardTotal) * 100;
             if (fill) fill.style.width = pct + '%';
             if (label) label.textContent = 'Question ' + (currentOnboardStep + 1) + ' of ' + onboardTotal;
             if (prevBtn) prevBtn.disabled = currentOnboardStep === 0;
-            if (nextBtn) {
-                const last = currentOnboardStep >= onboardTotal - 1;
-                nextBtn.textContent = last ? 'Continue to comments' : 'Next';
-                nextBtn.disabled = !isCurrentOnboardStepAnswered();
-            }
+            syncOnboardHint();
             updateOnboardAria();
         }
 
-        function syncOnboardNextOnly() {
-            const nextBtn = document.getElementById('evalOnboardNext');
-            if (!nextBtn || onboardTotal === 0) return;
-            const last = currentOnboardStep >= onboardTotal - 1;
-            nextBtn.textContent = last ? 'Continue to comments' : 'Next';
-            nextBtn.disabled = !isCurrentOnboardStepAnswered();
+        function finishQuestionSectionAndGoToComments() {
+            const commentsCard = document.getElementById('evalCommentsCard');
+            const ta = document.getElementById('comments');
+            const cel = document.getElementById('evalQuestionsCelebration');
+            const qCard = document.querySelector('.eval-questions-card');
+
+            function goToCommentsSection() {
+                commentsCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => ta?.focus(), 450);
+            }
+
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (cel && qCard && !prefersReducedMotion) {
+                cel.classList.add('eval-questions-celebration--active');
+                qCard.classList.add('eval-questions-card--celebrate');
+                window.setTimeout(() => goToCommentsSection(), 520);
+                window.setTimeout(() => {
+                    cel.classList.remove('eval-questions-celebration--active');
+                    qCard.classList.remove('eval-questions-card--celebrate');
+                }, 1380);
+            } else {
+                goToCommentsSection();
+            }
+        }
+
+        function advanceOnboardForward() {
+            if (!isCurrentOnboardStepAnswered()) return;
+            if (currentOnboardStep < onboardTotal - 1) {
+                currentOnboardStep++;
+                syncOnboardUI();
+                updateProgress();
+                return;
+            }
+            finishQuestionSectionAndGoToComments();
+        }
+
+        function scheduleAdvanceAfterRating() {
+            clearOnboardAdvanceTimer();
+            if (!isCurrentOnboardStepAnswered()) return;
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const delay = prefersReducedMotion ? 0 : 280;
+            onboardAdvanceTimer = window.setTimeout(() => {
+                onboardAdvanceTimer = null;
+                advanceOnboardForward();
+            }, delay);
+        }
+
+        function trySwipeAdvance() {
+            if (!isCurrentOnboardStepAnswered()) {
+                showEvalToast('Select a score before moving on.', 'error');
+                return;
+            }
+            clearOnboardAdvanceTimer();
+            advanceOnboardForward();
         }
 
         function goToOnboardStep(i) {
@@ -292,6 +366,7 @@ $assetBase = '../../assets';
         }
 
         function resetOnboard() {
+            clearOnboardAdvanceTimer();
             currentOnboardStep = 0;
             onboardTotal = 0;
             const track = document.getElementById('evalOnboardTrack');
@@ -312,7 +387,6 @@ $assetBase = '../../assets';
                 const hid = el.querySelector('input[type="hidden"][data-qid]');
                 el.classList.toggle('is-unanswered', !hid || hid.value === '');
             });
-            syncOnboardNextOnly();
         }
 
         async function loadEvaluations() {
@@ -436,6 +510,7 @@ $assetBase = '../../assets';
                 const track = document.getElementById('evalOnboardTrack');
                 const onboardEl = document.getElementById('evalOnboard');
                 const emptyEl = document.getElementById('evalOnboardEmpty');
+                clearOnboardAdvanceTimer();
                 track.innerHTML = '';
                 onboardTotal = data.questions.length;
                 currentOnboardStep = 0;
@@ -478,6 +553,7 @@ $assetBase = '../../assets';
                             const hid = block.querySelector('input[type="hidden"][data-qid]');
                             if (hid) hid.value = btn.dataset.value;
                             updateProgress();
+                            scheduleAdvanceAfterRating();
                         });
                     });
                     syncOnboardUI();
@@ -550,6 +626,7 @@ $assetBase = '../../assets';
 
         document.getElementById('resetBtn').addEventListener('click', () => {
             if (!confirm('Are you sure you want to reset the form?')) return;
+            clearOnboardAdvanceTimer();
             document.getElementById('evalForm').reset();
             document.querySelectorAll('.rating-btn.active').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('#evalOnboardTrack input[type="hidden"][data-qid]').forEach(h => { h.value = ''; });
@@ -560,24 +637,10 @@ $assetBase = '../../assets';
 
         document.getElementById('evalOnboardPrev').addEventListener('click', () => {
             if (currentOnboardStep > 0) {
+                clearOnboardAdvanceTimer();
                 currentOnboardStep--;
                 syncOnboardUI();
-            }
-        });
-
-        document.getElementById('evalOnboardNext').addEventListener('click', () => {
-            if (!isCurrentOnboardStepAnswered()) {
-                showEvalToast('Select a score for this question to continue.', 'error');
-                return;
-            }
-            if (currentOnboardStep < onboardTotal - 1) {
-                currentOnboardStep++;
-                syncOnboardUI();
-            } else {
-                const commentsCard = document.getElementById('evalCommentsCard');
-                const ta = document.getElementById('comments');
-                commentsCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(() => ta?.focus(), 400);
+                updateProgress();
             }
         });
 
@@ -590,10 +653,9 @@ $assetBase = '../../assets';
             const dx = e.changedTouches[0].screenX - touchStartX;
             touchStartX = null;
             if (Math.abs(dx) < 50) return;
-            const nextBtn = document.getElementById('evalOnboardNext');
             const prevBtn = document.getElementById('evalOnboardPrev');
             if (dx < 0) {
-                if (!nextBtn.disabled) nextBtn.click();
+                trySwipeAdvance();
             } else if (!prevBtn.disabled) {
                 prevBtn.click();
             }
