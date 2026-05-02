@@ -32,8 +32,9 @@ Instructor-Evaluation-System/
 │       ├── analytics.php            # Aggregated data endpoints
 │       └── admin.php                # User/course/dept management
 ├── database/
-│   ├── schema.sql                   # Full DDL (13 tables)
-│   └── seed.sql                     # Test data with 5 roles
+│   ├── schema.sql                   # Full DDL + default question templates
+│   ├── clear_data.sql               # Truncate all data except default_questions
+│   └── seed.sql                     # Placeholder (no demo data; see file)
 ├── .env.example                     # Database config template
 ├── .htaccess                        # Apache security rules
 └── assets/html/                     # Original HTML prototypes (archived)
@@ -68,11 +69,11 @@ Draft → Scheduled → Open → Closed → Reviewed → Archived
    # Edit .env with your TiDB Cloud credentials
    ```
 
-2. **Initialize the database**:
+2. **Initialize the database** (creates `ievaluation`, all tables, and the 13 default evaluation questions):
    ```bash
    mysql -h <host> -P 4000 -u <user> -p --ssl-ca=<cert> < database/schema.sql
-   mysql -h <host> -P 4000 -u <user> -p --ssl-ca=<cert> < database/seed.sql
    ```
+   There is no bundled demo data. Add departments, users, and courses via the Admin portal or your own SQL. To wipe data later while keeping the default question templates, run `database/clear_data.sql`.
 
 3. **Start PHP server**:
    ```bash
@@ -82,18 +83,27 @@ Draft → Scheduled → Open → Closed → Reviewed → Archived
 
 4. **Access**: Open `http://localhost:8000`
 
-## Default Test Accounts
+## First admin user
 
-All passwords: `password123`
+After `schema.sql`, create at least one admin (or use the Admin UI if you already have an admin). Example: generate a bcrypt hash, then insert:
 
-| Role | Username |
-|------|----------|
-| Admin | `admin` |
-| Dean (CS) | `dean.cs` |
-| Dean (Eng) | `dean.eng` |
-| HR | `hr.staff` |
-| Instructor | `sarah.j`, `michael.c`, `emily.d`, `abebe.k` |
-| Student | `2021001`, `2021002`, `2021003`, `2021045`, `2021050` |
+```bash
+php -r 'echo password_hash("your-secure-password", PASSWORD_BCRYPT), "\n";'
+```
+
+```sql
+USE ievaluation;
+INSERT INTO users (username, password_hash, full_name, email, role, department_id, status)
+VALUES (
+  'admin',
+  'PASTE_BCRYPT_HASH_HERE',
+  'System Administrator',
+  NULL,
+  'admin',
+  NULL,
+  'active'
+);
+```
 
 ## Key Security Features
 

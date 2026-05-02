@@ -235,3 +235,19 @@ CREATE TABLE default_questions (
     question_order INT NOT NULL DEFAULT 0,
     is_active TINYINT(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Standard rubric copied into each new evaluation sheet (no demo users/courses here)
+INSERT INTO default_questions (question_text, question_order, is_active) VALUES
+('The course instructor gives course outlines at the beginning of the semester.', 1, 1),
+('The course instructor teaches effectively by preparation using useful instructional materials and available technology.', 2, 1),
+('The course instructor is knowledgeable enough on his course.', 3, 1),
+('The course instructor arrives on time.', 4, 1),
+('The course instructor leaves on time.', 5, 1),
+('The course instructor manages and maintains appropriate discipline in the class.', 6, 1),
+('The course instructor covered all chapters in the course outline.', 7, 1),
+('The course instructor gives immediate feedback on students\' progress and performances.', 8, 1),
+('The course instructor encourages student\'s interaction/participation.', 9, 1),
+('Assessment covers fairly all contents and learning experiences.', 10, 1),
+('The course instructor uses his/her office/consultation hours to render academic support and advice to the students.', 11, 1),
+('The course instructor returns the graded script within reasonable time.', 12, 1),
+('The course instructor serves as a role model through high moral standards in class and on campus, as well as encouraging high professional standards.', 13, 1);
