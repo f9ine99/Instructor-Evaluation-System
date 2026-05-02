@@ -78,14 +78,13 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             </div>
         </div>
 
-        <section id="overview" class="section-content active admin-overview" aria-labelledby="adminOverviewHeading">
+        <section id="overview" class="section-content active admin-overview" aria-label="System overview">
             <div class="admin-overview-inner">
                 <header class="admin-overview-hero">
                     <div class="admin-overview-hero__badge" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     </div>
                     <div>
-                        <h2 class="admin-overview-hero__title" id="adminOverviewHeading">System overview</h2>
                         <p class="admin-overview-hero__lead">Whole-institution counts: people, organizational units, evaluations, and response quality.</p>
                     </div>
                 </header>
@@ -98,18 +97,8 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             </div>
         </section>
 
-        <section id="manage" class="section-content admin-manage" aria-hidden="true" aria-labelledby="adminManageHeading">
+        <section id="manage" class="section-content admin-manage" aria-hidden="true" aria-label="Manage data">
             <div class="admin-manage-inner">
-                <header class="admin-manage-intro">
-                    <div class="admin-manage-intro__badge" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                    </div>
-                    <div>
-                        <h2 class="admin-manage-title" id="adminManageHeading">Manage data</h2>
-                        <p class="admin-manage-lead"><strong>Classes</strong> are live course offerings (catalog + instructor + term)—students are evaluated per class roster. Departments and user accounts anchor the rest.</p>
-                    </div>
-                </header>
-
                 <div class="admin-manage-controls">
                     <div class="admin-manage-controls__primary">
                         <nav class="admin-manage-segment" role="tablist" aria-label="Dataset">
@@ -178,7 +167,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             </div>
         </section>
 
-        <section id="settings" class="section-content admin-settings" aria-hidden="true" aria-labelledby="adminSettingsHeading">
+        <section id="settings" class="section-content admin-settings" aria-hidden="true" aria-label="Settings">
             <div class="admin-settings-shell">
                 <header class="admin-settings-hero">
                     <div class="admin-settings-hero__badge" aria-hidden="true">
@@ -188,7 +177,6 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                         </svg>
                     </div>
                     <div>
-                        <h2 class="admin-settings-hero__title" id="adminSettingsHeading">Settings</h2>
                         <p class="admin-settings-hero__lead">Administrator profile, live session check, and password updates for this browser session.</p>
                     </div>
                 </header>
@@ -718,7 +706,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             }
         });
         var datasetHints = {
-            courses: 'Each row is one class offering (dept + instructor + term). Open Roster for enrolments. Classes with evaluations but an empty roster show Eval needs roster in the Enrolled column.',
+            courses: '',
             departments: 'Organizational units used when assigning users and catalog courses.'
         };
         var mh = document.getElementById('manageDatasetHint');
@@ -1630,7 +1618,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                     }).join('') || ('<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--empty">' + escapeHtml(emptyLbl) + '</td></tr>');
                 } else if (currentTab === 'courses') {
                     head.innerHTML =
-                        '<tr><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Department</th><th scope="col">Instructor</th><th scope="col">Term</th><th scope="col" class="admin-manage-mono admin-th-enrolled" title="Headcount on roster; &quot;Eval needs roster&quot; when a dean sheet is live but enrollment is empty.">Enrolled</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
+                        '<tr><th scope="col">Code</th><th scope="col">Title</th><th scope="col">Department</th><th scope="col">Instructor</th><th scope="col">Term</th><th scope="col" class="admin-manage-mono admin-th-enrolled">Enrolled</th><th scope="col">Status</th><th scope="col" class="admin-manage-table__actions">Actions</th></tr>';
                     body.innerHTML = data.map(function (c) {
                         var active = c.status === 'active';
                         var enr = c.enrollment_count != null ? parseInt(c.enrollment_count, 10) : 0;

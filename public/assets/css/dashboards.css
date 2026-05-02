@@ -1984,49 +1984,6 @@ button.nav-item {
   gap: clamp(18px, 2.8vw, 28px);
 }
 
-.admin-dashboard .admin-manage-intro {
-  display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  padding-bottom: 4px;
-  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
-}
-
-.admin-dashboard .admin-manage-intro__badge {
-  flex-shrink: 0;
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-primary);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--accent-primary) 16%, transparent),
-    color-mix(in srgb, var(--accent-secondary) 8%, transparent)
-  );
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, var(--card-border));
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-.admin-dashboard .admin-manage-title {
-  margin: 0 0 8px;
-  font-size: clamp(1.35rem, 2.5vw, 1.65rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-.admin-dashboard .admin-manage-lead {
-  margin: 0;
-  max-width: 58ch;
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--text-muted);
-}
-
 .admin-dashboard .admin-manage-controls {
   display: flex;
   flex-wrap: wrap;
@@ -2209,6 +2166,11 @@ button.nav-item {
   padding: 14px 22px;
   border-bottom: 1px solid var(--card-border);
   background: color-mix(in srgb, var(--bg-primary) 35%, transparent);
+}
+
+/* [hidden] is otherwise beaten by display:flex above — hide role filters on Classes / Departments tabs */
+.admin-dashboard .admin-user-role-bar[hidden] {
+  display: none !important;
 }
 
 .admin-dashboard .admin-user-role-bar__label {
@@ -2502,10 +2464,6 @@ html.light-mode .admin-dashboard .admin-data-panel__toolbar {
   background: rgba(248, 250, 252, 0.95);
 }
 
-html.light-mode .admin-dashboard .admin-manage-intro__badge {
-  box-shadow: 0 6px 20px rgba(6, 71, 52, 0.12);
-}
-
 html.light-mode .admin-dashboard .admin-manage-controls {
   box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
 }
@@ -2549,15 +2507,6 @@ html.light-mode .admin-dashboard .admin-data-panel {
   );
   border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, var(--card-border));
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
-}
-
-.admin-dashboard .admin-settings-hero__title {
-  margin: 0 0 8px;
-  font-size: clamp(1.35rem, 2.4vw, 1.6rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-  line-height: 1.2;
 }
 
 .admin-dashboard .admin-settings-hero__lead {
@@ -2965,15 +2914,6 @@ html.light-mode .admin-dashboard .admin-settings-session-row {
   );
   border: 1px solid color-mix(in srgb, var(--accent-primary) 26%, var(--card-border));
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.12);
-}
-
-.admin-dashboard .admin-overview-hero__title {
-  margin: 0 0 8px;
-  font-size: clamp(1.32rem, 2.35vw, 1.62rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
-  line-height: 1.2;
 }
 
 .admin-dashboard .admin-overview-hero__lead {
