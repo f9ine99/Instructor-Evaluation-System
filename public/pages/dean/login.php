@@ -15,6 +15,7 @@ $icon = '<path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light-mode'); } catch (e) {}</script>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title><?= $title ?> | HOPE System</title>
     <link rel="stylesheet" href="<?= $assetBase ?>/css/variables.css">
@@ -103,10 +104,15 @@ $icon = '<path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12
                 const response = await fetch('/api/auth.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
+                    credentials: 'same-origin',
                     body: JSON.stringify(Object.fromEntries(formData))
                 });
 
                 const result = await response.json();
+                if (!response.ok) {
+                    const msg = [result.message || 'Login failed.', result.error].filter(Boolean).join(' — ');
+                    throw new Error(msg);
+                }
 
                 if (result.success) {
                     submitBtn.querySelector('.btn-text').textContent = 'Success!';
@@ -121,7 +127,7 @@ $icon = '<path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12
             } catch (error) {
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
-                errorMessage.textContent = error.message;
+                errorMessage.textContent = error.message || 'Connection failed. Check your network.';
                 errorMessage.style.display = 'block';
                 loginCard.classList.add('error');
             }

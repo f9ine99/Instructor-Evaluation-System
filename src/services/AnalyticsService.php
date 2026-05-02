@@ -66,7 +66,7 @@ class AnalyticsService {
     /**
      * Get all instructor performance summaries (used by HR and Admin dashboards)
      */
-    public static function getAllInstructorSummaries(?string $academicYear = null, ?string $semester = null): array {
+    public static function getAllInstructorSummaries(?string $academicYear = null, ?string $semester = null, ?int $departmentId = null): array {
         $db = Database::getConnection();
 
         $sql = 'SELECT u.id, u.full_name, d.name as department_name,
@@ -91,8 +91,14 @@ class AnalyticsService {
 
         $sql .= ' LEFT JOIN submissions s ON s.evaluation_sheet_id = es.id
                    LEFT JOIN responses r ON r.submission_id = s.id
-                   WHERE u.role = "instructor" AND u.status = "active"
-                   GROUP BY u.id, u.full_name, d.name
+                   WHERE u.role = "instructor" AND u.status = "active"';
+
+        if ($departmentId !== null) {
+            $sql .= ' AND u.department_id = :dept_id';
+            $params[':dept_id'] = $departmentId;
+        }
+
+        $sql .= ' GROUP BY u.id, u.full_name, d.name
                    ORDER BY avg_rating DESC';
 
         $stmt = $db->prepare($sql);
@@ -264,6 +270,62 @@ class AnalyticsService {
     // =====================================================
     // SYSTEM-WIDE STATS
     // =====================================================
+
+    /**
+     * Per-question averages for one evaluation sheet (dean / admin results view)
+     */
+    public static function getSheetQuestionStats(int $sheetId): array {
+        $db = Database::getConnection();
+        $stmt = $db->prepare(
+            'SELECT q.id, q.question_text, q.question_order,
+                    AVG(r.rating) AS avg_rating,
+                    COUNT(r.id) AS response_count
+             FROM questions q
+             LEFT JOIN responses r ON r.question_id = q.id
+             LEFT JOIN submissions sub ON r.submission_id = sub.id AND sub.evaluation_sheet_id = q.evaluation_sheet_id
+             WHERE q.evaluation_sheet_id = :sid
+             GROUP BY q.id, q.question_text, q.question_order
+             ORDER BY q.question_order'
+        );
+        $stmt->execute([':sid' => $sheetId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Department-scoped dashboard stats (dean role)
+     */
+    public static function getDepartmentStats(int $departmentId): array {
+        $db = Database::getConnection();
+        $stats = [];
+
+        $stmt = $db->prepare('SELECT COUNT(*) FROM evaluation_sheets WHERE department_id = ? AND status = "open"');
+        $stmt->execute([$departmentId]);
+        $stats['open_evaluations'] = (int) $stmt->fetchColumn();
+
+        $stmt = $db->prepare(
+            'SELECT COUNT(*) FROM submissions s
+             INNER JOIN evaluation_sheets es ON s.evaluation_sheet_id = es.id
+             WHERE es.department_id = ?'
+        );
+        $stmt->execute([$departmentId]);
+        $stats['total_submissions'] = (int) $stmt->fetchColumn();
+
+        $stmt = $db->prepare('SELECT COUNT(*) FROM evaluation_sheets WHERE department_id = ? AND status = "closed"');
+        $stmt->execute([$departmentId]);
+        $stats['pending_reviews'] = (int) $stmt->fetchColumn();
+
+        $stmt = $db->prepare(
+            'SELECT AVG(r.rating) FROM responses r
+             INNER JOIN submissions s ON r.submission_id = s.id
+             INNER JOIN evaluation_sheets es ON s.evaluation_sheet_id = es.id
+             WHERE es.department_id = ?'
+        );
+        $stmt->execute([$departmentId]);
+        $avg = $stmt->fetchColumn();
+        $stats['system_avg_score'] = $avg ? round((float) $avg, 2) : 0;
+
+        return $stats;
+    }
 
     /**
      * Get system-wide statistics for dashboard overview cards
