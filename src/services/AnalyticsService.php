@@ -120,6 +120,21 @@ class AnalyticsService {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Active courses in a department (for dean evaluation form picker).
+     */
+    public static function listCoursesInDepartment(int $departmentId): array {
+        $db = Database::getConnection();
+        $stmt = $db->prepare(
+            'SELECT id, code, title, academic_year, semester
+             FROM courses
+             WHERE department_id = :dept AND status = "active"
+             ORDER BY code ASC, academic_year DESC, FIELD(semester, "I", "II", "Summer")'
+        );
+        $stmt->execute([':dept' => $departmentId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // =====================================================
     // DEPARTMENT-LEVEL ANALYTICS
     // =====================================================

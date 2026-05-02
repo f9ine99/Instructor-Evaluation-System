@@ -67,6 +67,33 @@ switch ($action) {
             'instructors' => AnalyticsService::listInstructorsInDepartment($deptId),
         ]);
         break;
+    case 'department_courses':
+        if (!AuthService::hasRole('dean', 'hr', 'admin')) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            exit;
+        }
+        $deptIdCourses = null;
+        if (AuthService::hasRole('dean')) {
+            $deptIdCourses = AuthService::getDepartmentId();
+            if (!$deptIdCourses) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No department assigned.']);
+                exit;
+            }
+        } else {
+            $deptIdCourses = (int) ($_GET['department_id'] ?? 0);
+            if ($deptIdCourses <= 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'department_id is required.']);
+                exit;
+            }
+        }
+        echo json_encode([
+            'success' => true,
+            'courses' => AnalyticsService::listCoursesInDepartment($deptIdCourses),
+        ]);
+        break;
     case 'department_performance':
         if (!AuthService::hasRole('dean','hr','admin')) { http_response_code(403); echo json_encode(['success'=>false]); exit; }
         echo json_encode(['success'=>true,'departments'=>AnalyticsService::getDepartmentPerformance($_GET['academic_year']??null)]); break;

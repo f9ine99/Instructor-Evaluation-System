@@ -213,19 +213,16 @@ $ab = '../../assets';
                     </span>
                     <div class="dean-form-section__head-text">
                         <h3 class="dean-form-section__title">Course &amp; instructor</h3>
-                        <p class="dean-form-section__lead">Link this sheet to a course (by ID) and an instructor from your department (by name).</p>
+                        <p class="dean-form-section__lead">Choose a course and instructor from your department.</p>
                     </div>
                 </div>
                 <div class="form-row-2 dean-form-card__grid">
                     <div class="form-group">
-                        <label class="form-label" for="createCourseId">Course ID <span class="dean-req" aria-hidden="true">*</span></label>
-                        <div class="dean-input-affix">
-                            <span class="dean-input-affix__icon" aria-hidden="true">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                            </span>
-                            <input type="number" min="1" class="form-input dean-modal-input dean-input-affix__input" id="createCourseId" name="course_id" required inputmode="numeric" autocomplete="off" aria-describedby="createCourseHint">
-                        </div>
-                        <p class="dean-field-hint" id="createCourseHint">Numeric ID from your course catalog.</p>
+                        <label class="form-label" for="createCourseId">Course <span class="dean-req" aria-hidden="true">*</span></label>
+                        <select class="form-select dean-modal-select" id="createCourseId" name="course_id" required aria-describedby="createCourseHint">
+                            <option value="">Loading courses…</option>
+                        </select>
+                        <p class="dean-field-hint" id="createCourseHint">Code and title from your department’s active course catalog.</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="createInstructorId">Instructor <span class="dean-req" aria-hidden="true">*</span></label>
@@ -348,8 +345,13 @@ $ab = '../../assets';
         m.classList.toggle('is-open', open);
         m.setAttribute('aria-hidden', open ? 'false' : 'true');
         if (open) {
-            var insSel = document.getElementById('createInstructorId');
-            if (insSel && insSel.options.length === 1 && /loading/i.test(insSel.options[0].textContent)) {
+            function selectStillLoading(sel) {
+                return sel && sel.options.length === 1 && /loading/i.test(sel.options[0].textContent);
+            }
+            if (selectStillLoading(document.getElementById('createCourseId'))) {
+                loadDepartmentCoursePicker();
+            }
+            if (selectStillLoading(document.getElementById('createInstructorId'))) {
                 loadDepartmentInstructorPicker();
             }
             document.getElementById('createTitle').focus();
@@ -424,7 +426,50 @@ $ab = '../../assets';
         }
 
         loadEvalTable();
+        loadDepartmentCoursePicker();
         loadDepartmentInstructorPicker();
+    }
+
+    function formatCourseOptionLabel(c) {
+        var title = (c.title || '').trim();
+        if (title.length > 48) {
+            title = title.substring(0, 47) + '…';
+        }
+        var line = (c.code || '') + ' — ' + title;
+        if (c.academic_year || c.semester) {
+            line += ' · ' + (c.academic_year || '') + ' · ' + (c.semester || '');
+        }
+        return line;
+    }
+
+    async function loadDepartmentCoursePicker() {
+        var sel = document.getElementById('createCourseId');
+        if (!sel) return;
+        try {
+            var r = await fetch('/api/analytics.php?action=department_courses', {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' }
+            });
+            var d = await r.json();
+            if (!r.ok || !d.success || !d.courses) {
+                sel.innerHTML = '<option value="">' + escapeHtml(d.message || 'Could not load courses') + '</option>';
+                return;
+            }
+            if (!d.courses.length) {
+                sel.innerHTML = '<option value="">No active courses in your department</option>';
+                return;
+            }
+            var html = '<option value="">Select a course…</option>';
+            d.courses.forEach(function (c) {
+                var id = parseInt(c.id, 10);
+                if (isNaN(id)) return;
+                var label = formatCourseOptionLabel(c);
+                html += '<option value="' + id + '">' + escapeHtml(label) + '</option>';
+            });
+            sel.innerHTML = html;
+        } catch (e) {
+            sel.innerHTML = '<option value="">Failed to load courses</option>';
+        }
     }
 
     async function loadDepartmentInstructorPicker() {
