@@ -3006,6 +3006,35 @@ html.light-mode .admin-dashboard .admin-role-filter.active {
   width: 1%;
 }
 
+.admin-dashboard .admin-manage-actions-pair {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+  max-width: 22rem;
+}
+
+.admin-dashboard .admin-manage-table__actions .table-action-btn--resetpw:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+  color: var(--warning);
+}
+
+.admin-dashboard .admin-reset-pw-user {
+  margin: 0 0 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.admin-dashboard .admin-reset-pw-check {
+  align-items: flex-start;
+}
+
+.admin-dashboard .admin-modal-surface--reset-pw {
+  max-width: 28rem;
+}
+
 .admin-dashboard .admin-manage-mono {
   font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
   font-size: 12px;

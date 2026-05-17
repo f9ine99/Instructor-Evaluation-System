@@ -28,6 +28,21 @@ $assetBase = '../../assets';
         .login-card {
             border: 1px solid rgba(var(--accent-primary-rgb), 0.1);
         }
+        .student-login-extra {
+            margin-top: 22px;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        .student-login-extra a {
+            color: var(--accent-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .student-login-extra a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -70,6 +85,11 @@ $assetBase = '../../assets';
                     <span class="btn-text">Sign In</span>
                 </button>
             </form>
+            <p class="student-login-extra">
+                After you sign in, use <strong>Password</strong> in the top bar on evaluations.
+                <br>
+                Already signed in on this device? <a href="change-password.php">Change password</a>.
+            </p>
         </div>
     </div>
 

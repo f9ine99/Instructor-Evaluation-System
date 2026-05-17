@@ -8,7 +8,7 @@
  *   action=login           → { username, password, role }
  *   action=logout          → destroys session
  *   action=session_check   → { user } when session valid, else 401
- *   action=change_password → { current_password, new_password }; ends session on success
+ *   action=change_password → { current_password, new_password }; students stay signed in (session rotated); other roles logged out on success
  */
 
 header('Content-Type: application/json');

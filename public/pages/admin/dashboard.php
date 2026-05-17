@@ -448,6 +448,39 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
     </div>
 </div>
 
+<!-- Admin reset user password -->
+<div id="modalResetPassword" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalResetPwTitle" aria-hidden="true">
+    <div class="admin-modal-surface admin-modal-surface--reset-pw">
+        <h2 id="modalResetPwTitle">Reset password</h2>
+        <p class="admin-modal-lead" id="modalResetPwLead">Set a new password for this account. Prefer a strong temporary value and deliver it securely (in person / official channel).</p>
+        <p class="admin-reset-pw-user" id="modalResetPwUserLabel" aria-live="polite"></p>
+        <form id="formResetUserPassword">
+            <input type="hidden" id="rpUserId" name="user_id" value="">
+            <input type="hidden" id="rpUserRole" value="">
+            <div class="form-group" id="rpMustChangeWrap">
+                <label class="admin-course-check admin-reset-pw-check">
+                    <input type="checkbox" id="rpMustChange" name="must_change_password" checked>
+                    <span>Students: require a new password on first sign-in (recommended)</span>
+                </label>
+                <p class="admin-field-hint" id="rpMustChangeHint">For instructors, HR, dean, or admin accounts, this option is skipped — they sign in with the password you set here.</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="rpNewPw">New password <span style="color:var(--error);">*</span></label>
+                <input type="password" class="form-input" id="rpNewPw" name="new_password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Temporary password (min 8 characters)">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="rpConfirmPw">Confirm <span style="color:var(--error);">*</span></label>
+                <input type="password" class="form-input" id="rpConfirmPw" name="confirm" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="Repeat new password">
+            </div>
+            <p class="admin-settings-form-msg admin-reset-pw-msg" id="rpFormMsg" role="alert" aria-live="polite" hidden></p>
+            <div class="admin-modal-actions">
+                <button type="button" class="btn btn--secondary" id="rpCancelBtn">Cancel</button>
+                <button type="submit" class="btn-submit" id="rpSubmitBtn">Save password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Create department -->
 <div id="modalDepartment" class="dean-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalDeptTitle" aria-hidden="true">
     <div class="admin-modal-surface">
@@ -513,6 +546,13 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         var d = document.createElement('div');
         d.textContent = s;
         return d.innerHTML;
+    }
+    /** Safe for embedding in HTML double-quoted attributes */
+    function escapeAttr(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;');
     }
 
     var toastTimer;
@@ -772,6 +812,23 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
             pendingBulkClassContext = null;
             clearBulkImportClassLockedUI();
         }
+        if (!open && id === 'modalResetPassword') {
+            var f = document.getElementById('formResetUserPassword');
+            if (f) f.reset();
+            var msg = document.getElementById('rpFormMsg');
+            if (msg) {
+                msg.hidden = true;
+                msg.textContent = '';
+            }
+            document.getElementById('rpUserId').value = '';
+            document.getElementById('rpUserRole').value = '';
+            var mw = document.getElementById('rpMustChangeWrap');
+            if (mw) mw.hidden = false;
+            var cb = document.getElementById('rpMustChange');
+            if (cb) cb.checked = true;
+            var lb = document.getElementById('modalResetPwUserLabel');
+            if (lb) lb.textContent = '';
+        }
     }
 
     document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
@@ -780,7 +837,7 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
         });
     });
 
-    ['modalUser', 'modalCourse', 'modalDepartment', 'modalClassHub'].forEach(function (mid) {
+    ['modalUser', 'modalCourse', 'modalDepartment', 'modalClassHub', 'modalResetPassword'].forEach(function (mid) {
         var node = document.getElementById(mid);
         if (!node) return;
         node.addEventListener('click', function (e) {
@@ -790,10 +847,115 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
 
     document.addEventListener('keydown', function (e) {
         if (e.key !== 'Escape') return;
-        ['modalUser', 'modalCourse', 'modalDepartment', 'modalClassHub'].forEach(function (mid) {
+        ['modalUser', 'modalCourse', 'modalDepartment', 'modalClassHub', 'modalResetPassword'].forEach(function (mid) {
             var el = document.getElementById(mid);
             if (el && el.classList.contains('is-open')) setModalOpen(mid, false);
         });
+    });
+
+    document.getElementById('rpCancelBtn').addEventListener('click', function () {
+        setModalOpen('modalResetPassword', false);
+    });
+
+    document.getElementById('tableBody').addEventListener('click', function (e) {
+        var rp = e.target.closest('[data-act="reset-password"]');
+        if (!rp || rp.disabled) return;
+        var uid = parseInt(rp.getAttribute('data-user-id'), 10);
+        var role = (rp.getAttribute('data-user-role') || '').trim();
+        var login = rp.getAttribute('data-user-login') || '';
+        var fullName = rp.getAttribute('data-user-fullname') || '';
+        if (isNaN(uid) || uid <= 0) return;
+
+        document.getElementById('rpUserId').value = String(uid);
+        document.getElementById('rpUserRole').value = role;
+        var mw = document.getElementById('rpMustChangeWrap');
+        var mcb = document.getElementById('rpMustChange');
+        var mhint = document.getElementById('rpMustChangeHint');
+        if (role === 'student') {
+            if (mw) mw.hidden = false;
+            if (mcb) mcb.checked = true;
+            if (mhint) {
+                mhint.textContent =
+                    'Recommended for forgotten passwords: student signs in once with your temporary password, then sets their own.';
+            }
+        } else {
+            if (mw) mw.hidden = true;
+            if (mcb) mcb.checked = false;
+            if (mhint) {
+                mhint.textContent = '';
+            }
+        }
+        var ul = document.getElementById('modalResetPwUserLabel');
+        if (ul) {
+            ul.innerHTML =
+                escapeHtml(login) +
+                ' <span style="opacity:0.85;">#' +
+                uid +
+                '</span> · ' +
+                escapeHtml(fullName) +
+                (role !== 'student' ? ' <span style="opacity:0.75;">(' + escapeHtml(role) + ')</span>' : '');
+        }
+        document.getElementById('rpFormMsg').hidden = true;
+        document.getElementById('rpFormMsg').textContent = '';
+        setModalOpen('modalResetPassword', true);
+        setTimeout(function () {
+            var i = document.getElementById('rpNewPw');
+            if (i) i.focus();
+        }, 100);
+    });
+
+    document.getElementById('formResetUserPassword').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var uid = parseInt(document.getElementById('rpUserId').value, 10);
+        var role = (document.getElementById('rpUserRole').value || '').trim();
+        var p1 = document.getElementById('rpNewPw').value;
+        var p2 = document.getElementById('rpConfirmPw').value;
+        var msg = document.getElementById('rpFormMsg');
+        var sub = document.getElementById('rpSubmitBtn');
+        msg.hidden = true;
+        msg.textContent = '';
+        if (isNaN(uid) || uid <= 0) return;
+        if (p1 !== p2) {
+            msg.textContent = 'Passwords do not match.';
+            msg.hidden = false;
+            return;
+        }
+        if (p1.length < 8) {
+            msg.textContent = 'Password must be at least 8 characters.';
+            msg.hidden = false;
+            return;
+        }
+        var body = {
+            action: 'reset_user_password',
+            user_id: uid,
+            new_password: p1,
+            must_change_password: role === 'student' ? !!document.getElementById('rpMustChange').checked : false
+        };
+        sub.disabled = true;
+        try {
+            var resp = await fetch('/api/admin.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify(body)
+            });
+            var d = await resp.json().catch(function () {
+                return {};
+            });
+            if (!resp.ok || !d.success) {
+                msg.textContent = d.message || 'Could not reset password.';
+                msg.hidden = false;
+                sub.disabled = false;
+                return;
+            }
+            showToast(d.message || 'Password updated.', 'success');
+            setModalOpen('modalResetPassword', false);
+            loadTable();
+        } catch (err) {
+            msg.textContent = err.message || 'Network error.';
+            msg.hidden = false;
+        }
+        sub.disabled = false;
     });
 
     function updateDeptFieldRequired() {
@@ -1607,13 +1769,39 @@ $settingsRoleLabel = isset($roleLabels[$rKey]) ? $roleLabels[$rKey] : ($rKey !==
                         }[currentUserRoleFilter] || 'No accounts for this role.');
                     body.innerHTML = data.map(function (u) {
                         var active = u.status === 'active';
-                        var canDeact = active && parseInt(u.id, 10) !== currentUserId;
+                        var uidNum = parseInt(u.id, 10);
+                        var canDeact = active && uidNum !== currentUserId;
+                        var canResetPw = active && uidNum !== currentUserId;
                         var btn = canDeact
                             ? '<button type="button" class="table-action-btn" data-act="deactivate" data-entity="user" data-id="' + u.id + '">Deactivate</button>'
                             : '<button type="button" class="table-action-btn" disabled title="' + (!active ? 'Already inactive' : 'Cannot deactivate your own account') + '">—</button>';
+                        var resetTitleSafe = '';
+                        if (!canResetPw) {
+                            resetTitleSafe = escapeAttr(!active ? 'Inactive account' : 'Use Settings to change your own password');
+                        }
+                        var resetBtn = canResetPw
+                            ? '<button type="button" class="table-action-btn table-action-btn--resetpw" data-act="reset-password" data-user-id="' +
+                              uidNum +
+                              '" data-user-role="' +
+                              escapeAttr(u.role || '') +
+                              '" data-user-login="' +
+                              escapeAttr(u.username || '') +
+                              '" data-user-fullname="' +
+                              escapeAttr(u.full_name || '') +
+                              '">Reset password</button>'
+                            : '<button type="button" class="table-action-btn" disabled title="' + resetTitleSafe + '">—</button>';
                         var row = '<tr><td class="admin-manage-mono">' + u.id + '</td><td class="admin-manage-strong">' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.full_name) + '</td>';
                         if (showRoleCol) row += '<td><span class="admin-chip admin-chip--role">' + escapeHtml(u.role) + '</span></td>';
-                        row += '<td><span class="status-badge ' + (active ? 'status-active' : 'status-pending') + '">' + escapeHtml(u.status) + '</span></td><td class="admin-manage-table__actions">' + btn + '</td></tr>';
+                        row +=
+                            '<td><span class="status-badge ' +
+                            (active ? 'status-active' : 'status-pending') +
+                            '">' +
+                            escapeHtml(u.status) +
+                            '</span></td><td class="admin-manage-table__actions">' +
+                            '<span class="admin-manage-actions-pair">' +
+                            resetBtn +
+                            btn +
+                            '</span></td></tr>';
                         return row;
                     }).join('') || ('<tr><td colspan="' + cs + '" class="admin-manage-msg admin-manage-msg--empty">' + escapeHtml(emptyLbl) + '</td></tr>');
                 } else if (currentTab === 'courses') {

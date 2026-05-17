@@ -305,15 +305,17 @@ class AuthService {
 
             self::logAudit((int) $user['id'], 'password_changed', 'user', (int) $user['id'], null);
 
-            // Students completing first login after bulk import stay signed in; others sign out for safety.
-            if (($user['role'] ?? '') === 'student' && $hadMustChange) {
+            // Students stay signed in (session rotated); other roles sign out after password change.
+            if (($user['role'] ?? '') === 'student') {
                 session_regenerate_id(true);
                 $_SESSION['user']['must_change_password'] = false;
 
                 return [
                     'success'       => true,
                     'sign_in_again' => false,
-                    'message'       => 'Your password has been updated. You can continue.',
+                    'message'       => $hadMustChange
+                        ? 'Your password has been updated. You can continue.'
+                        : 'Your password has been updated.',
                 ];
             }
 

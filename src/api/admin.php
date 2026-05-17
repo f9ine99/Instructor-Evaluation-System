@@ -485,6 +485,65 @@ if ($method === 'GET' && $action === 'list') {
         "Imported {$n} students (department_id {$deptId})"
     );
     echo json_encode(['success' => true, 'message' => 'Imported ' . $n . ' student(s).', 'count' => $n]);
+} elseif ($method === 'POST' && $action === 'reset_user_password') {
+    $targetId = (int) ($input['user_id'] ?? 0);
+    $newPassword = (string) ($input['new_password'] ?? '');
+    if ($targetId <= 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'user_id is required.']);
+        exit;
+    }
+    if ($targetId === AuthService::getUserId()) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Reset another user\'s password from here — use Settings to change your own.']);
+        exit;
+    }
+    if (strlen($newPassword) < 8 || strlen($newPassword) > 128) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'New password must be between 8 and 128 characters.']);
+        exit;
+    }
+
+    $ust = $db->prepare('SELECT id, username, role, status FROM users WHERE id = ? LIMIT 1');
+    $ust->execute([$targetId]);
+    $trow = $ust->fetch(PDO::FETCH_ASSOC);
+    if (!$trow || ($trow['status'] ?? '') !== 'active') {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'User not found or inactive.']);
+        exit;
+    }
+
+    $wantMustChange = $input['must_change_password'] ?? true;
+    if (is_string($wantMustChange)) {
+        $wantMustChange = filter_var(strtolower(trim($wantMustChange)), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        $wantMustChange = $wantMustChange === null ? true : $wantMustChange;
+    }
+    $mustFlag = (($trow['role'] ?? '') === 'student' && $wantMustChange) ? 1 : 0;
+
+    $hash = password_hash($newPassword, PASSWORD_BCRYPT);
+    $up = $db->prepare('UPDATE users SET password_hash = ?, must_change_password = ? WHERE id = ? AND status = ?');
+    $up->execute([$hash, $mustFlag, $targetId, 'active']);
+    if ($up->rowCount() < 1) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Could not update password.']);
+        exit;
+    }
+
+    AuthService::logAudit(
+        AuthService::getUserId(),
+        'password_reset_by_admin',
+        'user',
+        $targetId,
+        'Admin set new password for ' . ($trow['username'] ?? '')
+    );
+
+    echo json_encode([
+        'success'                => true,
+        'message'                => ($mustFlag === 1)
+            ? 'Password reset. Student must set a new password on next login.'
+            : 'Password reset. Share the new password securely.',
+        'must_change_password'   => $mustFlag === 1,
+    ]);
 } elseif ($method === 'POST' && $action === 'enroll_students_in_course') {
     $courseId = (int) ($input['course_id'] ?? 0);
     $rawIds = $input['student_ids'] ?? [];

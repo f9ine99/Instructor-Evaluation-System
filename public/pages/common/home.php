@@ -21,18 +21,7 @@
 
 <body class="home-page">
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <div class="page-bg-animation" aria-hidden="true">
-        <div class="pointer-glow"></div>
-        <div class="pointer-glow aura-two"></div>
-        <div class="pointer-glow aura-three"></div>
-        <span class="collapse-flash"></span>
-        <span class="float-orb orb-1"></span>
-        <span class="float-orb orb-2"></span>
-        <span class="float-orb orb-3"></span>
-        <span class="float-orb orb-4"></span>
-        <span class="float-orb orb-5"></span>
-        <span class="float-orb orb-6"></span>
-    </div>
+
     <header class="navbar-container">
         <div class="navbar-inner">
             <a href="home.php" class="logo">HOPE</a>
@@ -143,7 +132,6 @@
         <div class="fadeInUp" style="animation-delay: 0.8s;">
             <button type="button" class="hero-cta" id="heroCta">
                 Get Started
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </button>
         </div>
 
