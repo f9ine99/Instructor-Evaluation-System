@@ -4150,3 +4150,398 @@ html.light-mode .admin-dashboard .admin-class-hub-action-btn--bulk {
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* HR dashboard — administrative decisions */
+.hr-dashboard .hr-decision-card {
+  padding: 28px 32px 32px;
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--card-bg) 92%, var(--accent-primary) 8%) 0%,
+    var(--card-bg) 55%
+  );
+  border: 1px solid color-mix(in srgb, var(--card-border) 80%, var(--accent-primary) 20%);
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.18);
+}
+
+.hr-dashboard .hr-decision-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid color-mix(in srgb, var(--card-border) 85%, transparent);
+}
+
+.hr-dashboard .hr-decision-card__glyph {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 14%, var(--input-bg));
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, var(--card-border));
+}
+
+.hr-dashboard .hr-decision-card__title {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.hr-dashboard .hr-decision-card__lead {
+  margin: 0;
+  max-width: 52rem;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.hr-dashboard .hr-decision-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #86efac;
+  background: color-mix(in srgb, #22c55e 12%, var(--card-bg));
+  border: 1px solid color-mix(in srgb, #22c55e 35%, transparent);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.hr-dashboard .hr-decision-toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hr-dashboard .hr-decision-toast svg {
+  flex-shrink: 0;
+  color: #4ade80;
+}
+
+.hr-dashboard .hr-decision-form .form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.hr-dashboard .hr-decision-types {
+  margin: 0 0 22px;
+  padding: 0;
+  border: none;
+}
+
+.hr-dashboard .hr-decision-types__hint {
+  margin: -2px 0 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.hr-dashboard .hr-decision-field {
+  position: relative;
+}
+
+.hr-dashboard .hr-decision-field__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.hr-dashboard .hr-decision-select {
+  width: 100%;
+  max-width: 28rem;
+  padding: 12px 14px 12px 42px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 11px;
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hr-dashboard .hr-decision-select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent-primary) 55%, var(--input-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+}
+
+.hr-dashboard .hr-decision-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 10px;
+}
+
+.hr-dashboard .hr-decision-type-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 7.5rem;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--input-bg) 75%, var(--card-bg) 25%);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hr-dashboard .hr-decision-type-option:hover {
+  border-color: color-mix(in srgb, var(--accent-primary) 35%, var(--card-border));
+  transform: translateY(-1px);
+}
+
+.hr-dashboard .hr-decision-type-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.hr-dashboard .hr-decision-type-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent-primary) 55%, var(--card-border));
+  background: color-mix(in srgb, var(--accent-primary) 10%, var(--card-bg));
+  box-shadow: 0 8px 24px rgba(var(--accent-primary-rgb), 0.12);
+}
+
+.hr-dashboard .hr-decision-type-option__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hr-dashboard .hr-decision-type-option--commendation .hr-decision-type-option__icon {
+  color: #4ade80;
+  background: color-mix(in srgb, #22c55e 16%, transparent);
+}
+
+.hr-dashboard .hr-decision-type-option--training .hr-decision-type-option__icon {
+  color: #60a5fa;
+  background: color-mix(in srgb, #3b82f6 16%, transparent);
+}
+
+.hr-dashboard .hr-decision-type-option--promotion .hr-decision-type-option__icon {
+  color: #c4b5fd;
+  background: color-mix(in srgb, #8b5cf6 18%, transparent);
+}
+
+.hr-dashboard .hr-decision-type-option--warning .hr-decision-type-option__icon {
+  color: #fb923c;
+  background: color-mix(in srgb, #f97316 16%, transparent);
+}
+
+.hr-dashboard .hr-decision-type-option--contract .hr-decision-type-option__icon {
+  color: #5eead4;
+  background: color-mix(in srgb, #14b8a6 16%, transparent);
+}
+
+.hr-dashboard .hr-decision-type-option__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hr-dashboard .hr-decision-type-option__desc {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.hr-dashboard .hr-decision-textarea {
+  width: 100%;
+  min-height: 8.5rem;
+  padding: 14px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hr-dashboard .hr-decision-textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent-primary) 55%, var(--input-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+}
+
+.hr-dashboard .hr-decision-notes-meta {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.hr-dashboard .hr-decision-form__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 22px;
+  border-top: 1px solid color-mix(in srgb, var(--card-border) 85%, transparent);
+}
+
+.hr-dashboard .hr-decision-form__clear {
+  padding: 11px 20px;
+  min-height: 46px;
+  border-radius: 11px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.hr-dashboard .hr-decision-form__submit {
+  min-width: 168px;
+  min-height: 46px;
+  padding: 12px 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  box-shadow: 0 4px 18px rgba(var(--accent-primary-rgb), 0.42);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.hr-dashboard .hr-decision-form__submit:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+.hr-dashboard .hr-decisions-history {
+  margin-top: 32px;
+}
+
+.hr-dashboard .hr-decisions-history__head {
+  margin-bottom: 14px;
+}
+
+.hr-dashboard .hr-decisions-history__title {
+  margin: 0 0 4px;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.hr-dashboard .hr-decisions-history__lead {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.hr-dashboard .hr-decisions-history__table {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.hr-dashboard .hr-decisions-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 28px 16px !important;
+}
+
+.hr-dashboard .hr-decisions-instructor {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hr-dashboard .hr-decision-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.hr-dashboard .hr-decision-badge--commendation {
+  color: #4ade80;
+  background: color-mix(in srgb, #22c55e 14%, transparent);
+  border: 1px solid color-mix(in srgb, #22c55e 35%, transparent);
+}
+
+.hr-dashboard .hr-decision-badge--training {
+  color: #93c5fd;
+  background: color-mix(in srgb, #3b82f6 14%, transparent);
+  border: 1px solid color-mix(in srgb, #3b82f6 35%, transparent);
+}
+
+.hr-dashboard .hr-decision-badge--promotion {
+  color: #c4b5fd;
+  background: color-mix(in srgb, #8b5cf6 14%, transparent);
+  border: 1px solid color-mix(in srgb, #8b5cf6 35%, transparent);
+}
+
+.hr-dashboard .hr-decision-badge--warning {
+  color: #fdba74;
+  background: color-mix(in srgb, #f97316 14%, transparent);
+  border: 1px solid color-mix(in srgb, #f97316 35%, transparent);
+}
+
+.hr-dashboard .hr-decision-badge--contract {
+  color: #5eead4;
+  background: color-mix(in srgb, #14b8a6 14%, transparent);
+  border: 1px solid color-mix(in srgb, #14b8a6 35%, transparent);
+}
+
+.hr-dashboard .hr-decision-badge--default {
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, transparent);
+}
+
+@media (max-width: 640px) {
+  .hr-dashboard .hr-decision-card {
+    padding: 20px 18px 24px;
+  }
+
+  .hr-dashboard .hr-decision-type-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .hr-dashboard .hr-decision-form__footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .hr-dashboard .hr-decision-form__submit,
+  .hr-dashboard .hr-decision-form__clear {
+    width: 100%;
+  }
+}

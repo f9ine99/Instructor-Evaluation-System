@@ -9,7 +9,7 @@ $ab = '../../assets';
 <link rel="stylesheet" href="<?=$ab?>/css/variables.css"><link rel="stylesheet" href="<?=$ab?>/css/base.css">
 <link rel="stylesheet" href="<?=$ab?>/css/layout.css"><link rel="stylesheet" href="<?=$ab?>/css/components.css">
 <link rel="stylesheet" href="<?=$ab?>/css/dashboards.css"></head>
-<body><div class="admin-layout" id="dashboardLayout">
+<body class="hr-dashboard"><div class="admin-layout" id="dashboardLayout">
 <aside class="sidebar" id="dashboardSidebar" aria-label="HR navigation"><div class="sidebar-header"><div class="sidebar-logo" title="HOPE">HOPE</div><button type="button" class="sidebar-collapse-btn" id="sidebarCollapseBtn" aria-expanded="true" aria-controls="dashboardSidebar" title="Collapse sidebar"><svg class="sidebar-collapse-btn__icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg></button></div>
 <nav class="nav-links">
 <a class="nav-item active" onclick="switchSection('overview')"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg><span>Overview</span></a>
@@ -50,20 +50,95 @@ $ab = '../../assets';
 
 <!-- DECISIONS -->
 <section id="decisions" class="section-content">
-<div class="decision-form"><h2 style="color:var(--text-primary);margin-bottom:24px;">Record Administrative Decision</h2>
-<form id="decisionForm">
-<div class="form-group"><label class="form-label">Select Instructor</label><select class="form-select" id="instructorSelect" required><option value="">Select an instructor...</option></select></div>
-<div class="form-group"><label class="form-label">Decision Type</label><select class="form-select" id="decisionType" required>
-<option value="Commendation">Commendation</option><option value="Training Recommended">Training Recommended</option>
-<option value="Promotion Review">Promotion Review</option><option value="Performance Warning">Performance Warning</option>
-<option value="Contract Renewal">Contract Renewal</option></select></div>
-<div class="form-group"><label class="form-label">Justification / Notes</label><textarea class="form-textarea" id="decisionNotes" placeholder="Provide details based on evaluation reports..." required></textarea></div>
-<button type="submit" class="btn-submit">Save Decision</button>
-</form></div>
-<div class="data-table-container" style="margin-top:48px;">
-<h2 style="padding:24px 24px 0 24px;font-size:18px;color:var(--text-primary);">Recent Decisions</h2>
-<table class="data-table"><thead><tr><th>Instructor</th><th>Decision</th><th>Date</th><th>HR Staff</th></tr></thead>
-<tbody id="decisionsTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">Loading...</td></tr></tbody></table></div>
+<div class="hr-decision-card">
+<header class="hr-decision-card__header">
+<div class="hr-decision-card__glyph" aria-hidden="true">
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+</div>
+<div class="hr-decision-card__head-text">
+<h2 class="hr-decision-card__title">Record Administrative Decision</h2>
+<p class="hr-decision-card__lead">Log HR actions linked to evaluation outcomes. Decisions are stored on this device until a server endpoint is connected.</p>
+</div>
+</header>
+<div id="decisionSuccess" class="hr-decision-toast" role="status" aria-live="polite" hidden>
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+<span id="decisionSuccessText">Decision saved.</span>
+</div>
+<form id="decisionForm" class="hr-decision-form" novalidate>
+<div class="hr-decision-form__row">
+<div class="form-group hr-decision-form__field">
+<label class="form-label" for="instructorSelect">Instructor</label>
+<div class="hr-decision-field">
+<svg class="hr-decision-field__icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+<select class="form-select hr-decision-select" id="instructorSelect" required>
+<option value="">Choose instructor…</option>
+</select>
+</div>
+</div>
+</div>
+<fieldset class="hr-decision-types">
+<legend class="form-label">Decision type</legend>
+<p class="hr-decision-types__hint">Select the action that best reflects the evaluation review.</p>
+<div class="hr-decision-type-grid" role="radiogroup" aria-label="Decision type">
+<label class="hr-decision-type-option hr-decision-type-option--commendation">
+<input type="radio" name="decisionType" value="Commendation" checked>
+<span class="hr-decision-type-option__icon" aria-hidden="true">★</span>
+<span class="hr-decision-type-option__label">Commendation</span>
+<span class="hr-decision-type-option__desc">Recognize strong performance</span>
+</label>
+<label class="hr-decision-type-option hr-decision-type-option--training">
+<input type="radio" name="decisionType" value="Training Recommended">
+<span class="hr-decision-type-option__icon" aria-hidden="true">📚</span>
+<span class="hr-decision-type-option__label">Training</span>
+<span class="hr-decision-type-option__desc">Recommend development</span>
+</label>
+<label class="hr-decision-type-option hr-decision-type-option--promotion">
+<input type="radio" name="decisionType" value="Promotion Review">
+<span class="hr-decision-type-option__icon" aria-hidden="true">↗</span>
+<span class="hr-decision-type-option__label">Promotion</span>
+<span class="hr-decision-type-option__desc">Advancement review</span>
+</label>
+<label class="hr-decision-type-option hr-decision-type-option--warning">
+<input type="radio" name="decisionType" value="Performance Warning">
+<span class="hr-decision-type-option__icon" aria-hidden="true">!</span>
+<span class="hr-decision-type-option__label">Warning</span>
+<span class="hr-decision-type-option__desc">Below expectations</span>
+</label>
+<label class="hr-decision-type-option hr-decision-type-option--contract">
+<input type="radio" name="decisionType" value="Contract Renewal">
+<span class="hr-decision-type-option__icon" aria-hidden="true">✓</span>
+<span class="hr-decision-type-option__label">Contract</span>
+<span class="hr-decision-type-option__desc">Renewal decision</span>
+</label>
+</div>
+</fieldset>
+<div class="form-group hr-decision-form__field hr-decision-form__field--notes">
+<label class="form-label" for="decisionNotes">Justification / notes</label>
+<textarea class="form-textarea hr-decision-textarea" id="decisionNotes" rows="5" maxlength="2000" placeholder="Summarize evaluation data, meetings held, and the rationale for this decision…" required></textarea>
+<p class="hr-decision-notes-meta"><span id="decisionNotesCount">0</span> / 2000 characters</p>
+</div>
+<footer class="hr-decision-form__footer">
+<button type="reset" class="btn--secondary hr-decision-form__clear">Clear form</button>
+<button type="submit" class="btn-submit hr-decision-form__submit">
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+Save decision
+</button>
+</footer>
+</form>
+</div>
+<div class="hr-decisions-history">
+<div class="hr-decisions-history__head">
+<div>
+<h2 class="hr-decisions-history__title">Recent decisions</h2>
+<p class="hr-decisions-history__lead">Latest administrative actions recorded in this browser.</p>
+</div>
+</div>
+<div class="data-table-container hr-decisions-history__table">
+<table class="data-table"><thead><tr><th>Instructor</th><th>Decision</th><th>Date</th><th>HR staff</th></tr></thead>
+<tbody id="decisionsTableBody"><tr><td colspan="4" class="hr-decisions-empty">Loading…</td></tr></tbody></table>
+</div>
+</div>
+
 </section>
 </main></div>
 
@@ -129,21 +204,35 @@ renderDecisions();
 }catch(e){console.error('Dashboard error:',e);}
 }
 
+const HR_DECISION_BADGE={'Commendation':'hr-decision-badge--commendation','Training Recommended':'hr-decision-badge--training','Promotion Review':'hr-decision-badge--promotion','Performance Warning':'hr-decision-badge--warning','Contract Renewal':'hr-decision-badge--contract'};
+function escapeHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function renderDecisions(){
-const decisions = JSON.parse(localStorage.getItem('hr_decisions')||'[]');
-const tbody = document.getElementById('decisionsTableBody');
-if(!decisions.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">No decisions recorded yet.</td></tr>';return;}
-tbody.innerHTML = decisions.map(d=>`<tr><td style="font-weight:600;">${d.instructor}</td><td><span class="score-badge score-med" style="background:rgba(var(--accent-primary-rgb),0.1);color:var(--accent-primary);">${d.type}</span></td><td>${d.date}</td><td>${d.staff}</td></tr>`).join('');
+const decisions=JSON.parse(localStorage.getItem('hr_decisions')||'[]');
+const tbody=document.getElementById('decisionsTableBody');
+if(!decisions.length){tbody.innerHTML='<tr><td colspan="4" class="hr-decisions-empty">No decisions recorded yet.</td></tr>';return;}
+tbody.innerHTML=decisions.map(d=>`<tr><td class="hr-decisions-instructor">${escapeHtml(d.instructor)}</td><td><span class="hr-decision-badge ${HR_DECISION_BADGE[d.type]||'hr-decision-badge--default'}">${escapeHtml(d.type)}</span></td><td>${escapeHtml(d.date)}</td><td>${escapeHtml(d.staff)}</td></tr>`).join('');
 }
 
+function getSelectedDecisionType(){const r=document.querySelector('input[name="decisionType"]:checked');return r?r.value:'';}
+function showDecisionToast(msg){const t=document.getElementById('decisionSuccess');document.getElementById('decisionSuccessText').textContent=msg||'Decision saved.';t.hidden=false;t.classList.add('is-visible');clearTimeout(showDecisionToast._t);showDecisionToast._t=setTimeout(()=>{t.classList.remove('is-visible');setTimeout(()=>{t.hidden=true;},300);},4200);}
+const notesEl=document.getElementById('decisionNotes');const notesCount=document.getElementById('decisionNotesCount');
+function syncNotesCount(){if(notesCount&&notesEl)notesCount.textContent=String(notesEl.value.length);}
+if(notesEl){notesEl.addEventListener('input',syncNotesCount);syncNotesCount();}
+document.getElementById('decisionForm').addEventListener('reset',()=>{setTimeout(()=>{const ft=document.querySelector('input[name="decisionType"][value="Commendation"]');if(ft)ft.checked=true;syncNotesCount();},0);});
 document.getElementById('decisionForm').addEventListener('submit',(e)=>{
 e.preventDefault();
-const decision={instructor:document.getElementById('instructorSelect').options[document.getElementById('instructorSelect').selectedIndex].text,
-type:document.getElementById('decisionType').value,notes:document.getElementById('decisionNotes').value,
+const sel=document.getElementById('instructorSelect');
+if(!sel.value){sel.focus();return;}
+const notes=notesEl.value.trim();
+if(notes.length<10){notesEl.focus();showDecisionToast('Please add at least 10 characters of justification.');return;}
+const decision={instructor:sel.options[sel.selectedIndex].text,type:getSelectedDecisionType(),notes:notes,
 date:new Date().toLocaleDateString(),staff:'<?= htmlspecialchars($user['full_name']) ?>'};
 const decisions=JSON.parse(localStorage.getItem('hr_decisions')||'[]');decisions.unshift(decision);
-localStorage.setItem('hr_decisions',JSON.stringify(decisions));e.target.reset();renderDecisions();
-alert('Administrative decision recorded successfully!');
+localStorage.setItem('hr_decisions',JSON.stringify(decisions));
+e.target.reset();
+const firstType=document.querySelector('input[name="decisionType"][value="Commendation"]');
+if(firstType)firstType.checked=true;
+syncNotesCount();renderDecisions();showDecisionToast('Administrative decision recorded successfully.');
 });
 
 loadDashboard();
